@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Finance</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="css/stats.css" />
+  <link rel="stylesheet" href="css/budget.css" />
+  <link rel="stylesheet" href="css/log.css" />
+  <link rel="stylesheet" href="css/entry.css" />
+</head>
+<body>
+
+  <!-- SPLASH -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <div class="splash-logo">₤</div>
+      <div class="splash-name">Finance</div>
+      <div class="splash-bar-wrap">
+        <div class="splash-bar" id="splash-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div id="app" class="app hidden">
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view active">
+      <div class="page-header">
+        <div class="page-header-left">
+          <span class="blink-dot"></span>
+          <span class="page-subtitle">Gestione Fondi</span>
+        </div>
+      </div>
+
+      <!-- Balance card -->
+      <div class="balance-card">
+        <div class="balance-label">TOTAL_LIQUID_ASSETS</div>
+        <div class="balance-row">
+          <div id="total-balance" class="balance-amount">—</div>
+          <button class="balance-toggle icon-btn" id="balance-toggle" aria-label="Mostra/nascondi saldo"></button>
+        </div>
+        <!-- Efficiency bar -->
+        <div class="efficiency-section">
+          <div id="burn-info-text" class="efficiency-label">ANALISI_FLUSSI...</div>
+          <div class="efficiency-bar-outer">
+            <div id="efficiency-fill" class="efficiency-bar-fill"></div>
+          </div>
+        </div>
+        <!-- Wallet grid -->
+        <div class="wallet-grid">
+          <div class="wallet-cell">
+            <div class="wallet-name">BANK</div>
+            <div id="bank-val" class="wallet-val">0.00 €</div>
+          </div>
+          <div class="wallet-cell">
+            <div class="wallet-name">TINABA</div>
+            <div id="tinaba-val" class="wallet-val">0.00 €</div>
+          </div>
+          <div class="wallet-cell">
+            <div class="wallet-name">PAYPAL</div>
+            <div id="paypal-val" class="wallet-val">0.00 €</div>
+          </div>
+          <div class="wallet-cell">
+            <div class="wallet-name">CASH</div>
+            <div id="cash-val" class="wallet-val">0.00 €</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction log -->
+      <div id="finance-log" class="transaction-log"></div>
+    </div>
+
+    <!-- STATS VIEW -->
+    <div id="view-stats" class="view hidden">
+      <div class="stats-grid">
+        <h2 class="stats-title">DIAGNOSTICS_V1.0</h2>
+
+        <!-- Survival bar -->
+        <div class="stats-card full-width">
+          <div class="stats-card-header">
+            <span>SURVIVAL_INDEX</span>
+            <span id="survival-percentage">0%</span>
+          </div>
+          <div class="survival-bar-outer">
+            <div id="survival-bar-fill" class="survival-bar-fill"></div>
+          </div>
+        </div>
+
+        <!-- Income / spent -->
+        <div class="stats-pair">
+          <div class="stats-card">
+            <div class="stats-card-label">MONTHLY_SPENT</div>
+            <div id="stat-total-spent" class="stats-card-value spent">0.00€</div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-label">MONTHLY_INCOME</div>
+            <div id="stat-total-income" class="stats-card-value income">0.00€</div>
+          </div>
+        </div>
+
+        <!-- Top expenses -->
+        <div class="stats-card full-width">
+          <div class="stats-card-label">TOP_RESOURCE_DRAIN</div>
+          <div id="top-expenses-list" class="top-expenses"></div>
+        </div>
+
+        <!-- Chart -->
+        <div class="stats-card">
+          <div class="stats-card-label">CATEGORY_WEIGHT</div>
+          <div class="chart-wrap">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gas -->
+        <div class="stats-card">
+          <div class="stats-card-label">⛽ FUEL_LOG</div>
+          <div class="gas-grid">
+            <div class="gas-cell">
+              <div class="gas-cell-label">SPESO_MESE</div>
+              <div id="gas-spent" class="gas-cell-val gas-spent">—</div>
+            </div>
+            <div class="gas-cell">
+              <div class="gas-cell-label">LITRI_MESE</div>
+              <div id="gas-liters" class="gas-cell-val gas-liters">—</div>
+            </div>
+            <div class="gas-cell">
+              <div class="gas-cell-label">PREZZO_MEDIO/L</div>
+              <div id="gas-avg-price" class="gas-cell-val">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI comment -->
+        <div class="stats-card full-width stats-card-ai">
+          <div class="stats-card-label accent-label">AUDIT_REPORT_V1</div>
+          <div id="stats-eval" class="stats-ai-text">INIZIALIZZAZIONE_ANALISTA...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUDGET VIEW -->
+    <div id="view-budget" class="view hidden">
+      <!-- Tab toggle -->
+      <div class="budget-tabs">
+        <button id="budget-tab-month" class="budget-tab active" data-tab="month">MENSILE</button>
+        <button id="budget-tab-year" class="budget-tab" data-tab="year">ANNUALE</button>
+      </div>
+
+      <!-- Monthly -->
+      <div id="budget-monthly-view">
+        <div class="stats-card full-width budget-summary-card">
+          <div class="stats-card-label">BUDGET_RESIDUO</div>
+          <div id="budget-remaining" class="budget-big-number">—</div>
+          <div class="budget-subtitle">su un budget di <span id="budget-total-monthly">—</span></div>
+          <div class="budget-bar-outer">
+            <div id="budget-main-bar" class="budget-bar-fill"></div>
+          </div>
+        </div>
+        <div class="stats-card full-width">
+          <div class="stats-card-label">BUDGET_CATEGORIE</div>
+          <div id="budget-categories-list" class="budget-cat-list"></div>
+        </div>
+        <div class="stats-card full-width stats-card-ai budget-ai-card">
+          <div class="stats-card-label accent-label">AI_INSIGHT // MENSILE</div>
+          <div id="budget-ai-comment" class="stats-ai-text">ANALISI_IN_ATTESA...</div>
+          <button id="btn-budget-ai-month" class="ai-refresh-btn">AGGIORNA_ANALISI</button>
+        </div>
+      </div>
+
+      <!-- Yearly -->
+      <div id="budget-yearly-view" class="hidden">
+        <div class="stats-card full-width budget-summary-card">
+          <div class="stats-card-label">PROIEZIONE_ANNO</div>
+          <div id="budget-year-projection" class="budget-big-number year-color">—</div>
+          <div class="budget-subtitle">spesa stimata su <span id="budget-year-income">—</span> entrate annue</div>
+        </div>
+        <div class="stats-card full-width">
+          <div class="stats-card-label">ANDAMENTO_MENSILE</div>
+          <div id="budget-months-breakdown" class="budget-months-list"></div>
+        </div>
+        <div class="stats-card full-width stats-card-ai budget-ai-card year-ai">
+          <div class="stats-card-label year-accent-label">AI_INSIGHT // ANNUALE</div>
+          <div id="budget-ai-comment-year" class="stats-ai-text">ANALISI_IN_ATTESA...</div>
+          <button id="btn-budget-ai-year" class="ai-refresh-btn year-btn">AGGIORNA_ANALISI</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG VIEW -->
+    <div id="view-log" class="view hidden">
+      <div class="log-search-box">
+        <div class="log-search-input-wrap">
+          <input type="text" id="finance-search" class="log-search-input" placeholder="CERCA NEL LOG..." autocomplete="off" />
+          <button id="search-clear" class="search-clear-btn hidden" aria-label="Cancella ricerca">&times;</button>
+        </div>
+        <button id="ai-search-toggle" class="ai-toggle-btn">
+          AI: <span id="ai-status">OFF</span>
+        </button>
+      </div>
+
+      <div class="cat-filters">
+        <button class="cat-btn" data-cat="CIBO"><i data-lucide="utensils"></i> CIBO</button>
+        <button class="cat-btn" data-cat="CASA"><i data-lucide="home"></i> CASA</button>
+        <button class="cat-btn" data-cat="TECH"><i data-lucide="cpu"></i> TECH</button>
+        <button class="cat-btn" data-cat="SVAGO"><i data-lucide="gamepad-2"></i> SVAGO</button>
+        <button class="cat-btn" data-cat="TRASPORTI"><i data-lucide="car"></i> TRASPORTI</button>
+        <button class="cat-btn" data-cat="SALUTE"><i data-lucide="pill"></i> SALUTE</button>
+        <button class="cat-btn" data-cat="ENTRATE"><i data-lucide="trending-up"></i> ENTRATE</button>
+        <button class="cat-btn" data-cat="ALTRO"><i data-lucide="layers"></i> ALTRO</button>
+        <button class="cat-btn" data-cat="SET_BALANCE"><i data-lucide="refresh-cw"></i> RESET</button>
+      </div>
+
+      <div class="month-filter-wrap">
+        <input type="month" id="month-picker" class="month-picker-input" aria-label="Filtra per mese" />
+        <button id="month-picker-btn" class="cat-btn time-btn">
+          <i data-lucide="calendar"></i> RICERCA MESE / ANNO
+        </button>
+      </div>
+
+      <div id="filtered-results" class="filtered-results"></div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item" data-view="budget">
+        <i data-lucide="cpu"></i>
+        <span>BUDGET</span>
+      </button>
+      <button class="nav-item" data-view="log">
+        <i data-lucide="filter"></i>
+        <span>HISTORY</span>
+      </button>
+      <button class="nav-item nav-home" data-view="home">
+        <div class="nav-home-circle">
+          <i data-lucide="home"></i>
+        </div>
+      </button>
+      <button class="nav-item" data-view="stats">
+        <i data-lucide="bar-chart-3"></i>
+        <span>STATS</span>
+      </button>
+      <button class="nav-item" id="nav-entry-btn">
+        <i data-lucide="plus-square"></i>
+        <span>ENTRY</span>
+      </button>
+    </nav>
+
+    <!-- ANALYST BUBBLE -->
+    <div id="analyst-bubble" class="analyst-bubble" role="status" aria-live="polite">
+      <p id="analyst-text">AWAITING_DATA...</p>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- ENTRY MODAL -->
+  <div id="entry-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Nuova transazione">
+    <div class="modal-box">
+      <button class="modal-close icon-btn" id="modal-close-btn" aria-label="Chiudi"></button>
+
+      <!-- Wallet selector -->
+      <div class="modal-section-label">CONTO</div>
+      <div class="wallet-selector" id="wallet-selector">
+        <button class="wallet-btn active" data-wallet="BANK">BANK</button>
+        <button class="wallet-btn" data-wallet="TINABA">TINABA</button>
+        <button class="wallet-btn" data-wallet="PAYPAL">PAYPAL</button>
+        <button class="wallet-btn" data-wallet="CASH">CASH</button>
+      </div>
+
+      <!-- Entry type tabs -->
+      <div class="entry-tabs">
+        <button class="entry-tab active" data-tab="single">SINGOLA</button>
+        <button class="entry-tab" data-tab="multi">MULTIPLA</button>
+        <button class="entry-tab" data-tab="transfer">SPOSTA</button>
+      </div>
+
+      <!-- Single form -->
+      <div id="form-single" class="entry-form">
+        <div class="form-row">
+          <div class="form-field field-amount">
+            <label class="field-label">IMPORTO (€)</label>
+            <input type="number" id="fin-amount" class="field-input" placeholder="15.00" step="0.01" inputmode="decimal" />
+          </div>
+          <div class="form-field field-desc">
+            <label class="field-label">CAUSALE</label>
+            <input type="text" id="fin-desc" class="field-input" placeholder="pizza, stipendio..." autocomplete="off" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">NOTE (opzionale)</label>
+          <input type="text" id="fin-note" class="field-input" placeholder="" autocomplete="off" />
+        </div>
+        <div class="sign-row">
+          <button id="fin-sign-btn" class="sign-btn negative" data-sign="-1">− SPESA</button>
+          <button id="fin-sign-btn-plus" class="sign-btn-alt" data-sign="1">+ ENTRATA</button>
+        </div>
+        <button id="submit-single" class="submit-btn">SALVA</button>
+      </div>
+
+      <!-- Multi form -->
+      <div id="form-multi" class="entry-form hidden">
+        <div id="fin-multi-rows" class="multi-rows"></div>
+        <button id="add-row-btn" class="add-row-btn">+ AGGIUNGI RIGA</button>
+        <button id="submit-multi" class="submit-btn">SALVA TUTTO</button>
+      </div>
+
+      <!-- Transfer form -->
+      <div id="form-transfer" class="entry-form hidden">
+        <div class="form-field">
+          <label class="field-label">IMPORTO (€)</label>
+          <input type="number" id="fin-transfer-amount" class="field-input" placeholder="100.00" step="0.01" inputmode="decimal" />
+        </div>
+        <div class="transfer-row">
+          <div class="form-field">
+            <label class="field-label">DA</label>
+            <select id="fin-transfer-from" class="field-select">
+              <option>BANK</option><option>TINABA</option><option>PAYPAL</option><option>CASH</option>
+            </select>
+          </div>
+          <div class="transfer-arrow">→</div>
+          <div class="form-field">
+            <label class="field-label">A</label>
+            <select id="fin-transfer-to" class="field-select">
+              <option>CASH</option><option>BANK</option><option>TINABA</option><option>PAYPAL</option>
+            </select>
+          </div>
+        </div>
+        <button id="submit-transfer" class="submit-btn">ESEGUI TRASFERIMENTO</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/budget.js"></script>
+  <script src="js/log.js"></script>
+  <script src="js/entry.js"></script>
+</body>
+</html>

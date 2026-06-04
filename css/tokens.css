@@ -1,0 +1,57 @@
+/* ============================================
+   FINANCE — Design tokens
+   ============================================ */
+
+:root {
+  /* Colori base */
+  --bg:           #0a0a0a;
+  --surface:      #111111;
+  --surface-2:    #181818;
+  --surface-3:    #222222;
+  --border-soft:  #1e1e1e;
+  --border:       #2a2a2a;
+  --border-strong:#3a3a3a;
+
+  /* Testo */
+  --text:         #f0f0f0;
+  --text-dim:     #888888;
+  --text-dim-2:   #555555;
+
+  /* Accent — giallo-ambra per Finance (diverso dal teal di Lift) */
+  --accent:       #f0b429;
+  --accent-ghost: rgba(240, 180, 41, 0.10);
+  --accent-dim:   rgba(240, 180, 41, 0.12);
+  --accent-border:rgba(240, 180, 41, 0.35);
+
+  /* Semantici */
+  --color-positive: #4ade80;
+  --color-negative: #ff4d6d;
+  --color-gas:      #ff9500;
+  --color-gas-liters: #00d4ff;
+
+  /* Tipografia */
+  --font: 'Ubuntu', sans-serif;
+  --fs-micro:  0.6rem;
+  --fs-small:  0.75rem;
+  --fs-body:   0.875rem;
+  --fs-title:  1.1rem;
+  --fs-display:1.75rem;
+
+  /* Spaziatura */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+
+  /* Bordi */
+  --radius-sm:  8px;
+  --radius:     12px;
+  --radius-lg:  16px;
+  --radius-pill:999px;
+
+  /* Transizioni */
+  --t-fast: 0.15s ease;
+  --t-med:  0.25s ease;
+}

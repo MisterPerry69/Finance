@@ -2,7 +2,7 @@
    FINANCE — API wrapper
    ============================================ */
 
-const GAS_URL = "YOUR_GAS_URL_HERE"; // sostituire con URL del deploy GAS
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxcua77YxGBLgbbRxUybLGL1zjhTlVl9KmfwfOcYxV5bCrl8fGqRezrjYpJOvp7nbq-gw/exec"; // sostituire con URL del deploy GAS
 
 async function apiGet(action, params) {
   const url = new URL(GAS_URL);

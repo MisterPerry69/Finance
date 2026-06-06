@@ -18,8 +18,12 @@ async function _parse(res) {
 }
 
 async function apiGet(action, params) {
-  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
-  const res = await fetch(GAS_URL + "?" + qs);
+  // GAS redirige le GET cross-origin bloccando il CORS — usiamo POST anche per le letture
+  const res = await fetch(GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action }, params || {})),
+  });
   return _parse(res);
 }
 

@@ -1,31 +1,43 @@
 /* ============================================
-   FINANCE — API wrapper
+   FINANCE — API layer
    ============================================ */
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxcua77YxGBLgbbRxUybLGL1zjhTlVl9KmfwfOcYxV5bCrl8fGqRezrjYpJOvp7nbq-gw/exec"; // sostituire con URL del deploy GAS
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxcua77YxGBLgbbRxUybLGL1zjhTlVl9KmfwfOcYxV5bCrl8fGqRezrjYpJOvp7nbq-gw/exec";
+
+// GAS risponde con un redirect a googleusercontent: parsare sempre come testo poi JSON.parse
+async function _parse(res) {
+  const txt = await res.text();
+  if (txt.trim().startsWith("<")) {
+    throw new Error("Il backend ha risposto con HTML invece di JSON. Verifica che il deploy GAS sia 'Chiunque' con accesso.");
+  }
+  try {
+    return JSON.parse(txt);
+  } catch (e) {
+    throw new Error("Risposta non JSON: " + txt.slice(0, 120));
+  }
+}
 
 async function apiGet(action, params) {
-  const url = new URL(GAS_URL);
-  url.searchParams.set("action", action);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  }
-  const res = await fetch(url.toString());
-  return res.json();
+  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+  const res = await fetch(GAS_URL + "?" + qs);
+  return _parse(res);
 }
 
 async function apiPost(action, payload) {
+  // text/plain evita il preflight CORS con GAS
   const res = await fetch(GAS_URL, {
     method: "POST",
-    body: JSON.stringify(Object.assign({ action }, payload))
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action }, payload || {})),
   });
-  return res.json();
+  return _parse(res);
 }
 
 async function apiPostText(action, payload) {
   const res = await fetch(GAS_URL, {
     method: "POST",
-    body: JSON.stringify(Object.assign({ action }, payload))
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action }, payload || {})),
   });
   return res.text();
 }

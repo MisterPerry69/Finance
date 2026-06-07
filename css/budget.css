@@ -24,6 +24,23 @@
   border-radius: var(--r-pill);
   background: rgba(37,183,187,0.12);
 }
+/* Puntino faro rosso in alto a destra */
+.budget-hero::after {
+  content: "";
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: #C8352A;
+  box-shadow: 0 0 8px rgba(200,53,42,0.7);
+  animation: beaconDot 2s ease-in-out infinite;
+}
+@keyframes beaconDot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(200,53,42,0.6); }
+  50%       { opacity: 0.4; box-shadow: 0 0 2px rgba(200,53,42,0.2); }
+}
 .budget-hero-label {
   font-size: var(--fs-micro);
   font-weight: 800;

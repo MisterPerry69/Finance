@@ -1,5 +1,5 @@
 /* ============================================
-   CASSA — Design tokens v2
+   TIDE — Design tokens
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@400;500;600;700&display=swap');
@@ -9,37 +9,41 @@
   --bg:           #f0fafa;
   --bg-card:      #ffffff;
   --bg-subtle:    #e4f4f5;
-  --bg-deep:      #143C51;
 
-  /* ---- Teal family ---- */
+  /* ---- Teal / acqua ---- */
   --teal:         #25B7BB;
   --teal-light:   #A6D1D4;
   --teal-pale:    #ECFCFC;
   --teal-dim:     rgba(37,183,187,0.12);
-  --teal-border:  rgba(37,183,187,0.3);
+  --teal-border:  rgba(37,183,187,0.30);
   --slate:        #7E9BA5;
   --navy:         #143C51;
   --navy-dim:     rgba(20,60,81,0.08);
 
+  /* ---- Rosso faro ---- */
+  --beacon:       #C8352A;
+  --beacon-light: #E8635A;
+  --beacon-dim:   rgba(200,53,42,0.10);
+  --beacon-border:rgba(200,53,42,0.28);
+
   /* ---- Accents per sezione ---- */
   --accent-home:   #25B7BB;
-  --accent-stats:  #7E9BA5;
   --accent-budget: #143C51;
+  --accent-stats:  #7E9BA5;
 
-  /* Accent corrente (cambia via JS) */
-  --accent:        var(--accent-home);
+  /* Accent corrente (JS sovrascrive su :root) */
+  --accent: #25B7BB;
 
   /* ---- Testo ---- */
-  --text:          #0f2a35;
-  --text-dim:      #4a6470;
-  --text-dim-2:    #7E9BA5;
-  --text-on-teal:  #ffffff;
-  --text-on-navy:  rgba(255,255,255,0.9);
+  --text:         #0f2a35;
+  --text-dim:     #4a6470;
+  --text-dim-2:   #7E9BA5;
+  --text-on-navy: rgba(255,255,255,0.9);
 
   /* ---- Borders ---- */
-  --border-ghost:  rgba(37,183,187,0.10);
-  --border-soft:   rgba(20,60,81,0.10);
-  --border:        rgba(20,60,81,0.16);
+  --border-ghost: rgba(37,183,187,0.10);
+  --border-soft:  rgba(20,60,81,0.10);
+  --border:       rgba(20,60,81,0.16);
 
   /* ---- Semantici ---- */
   --color-positive: #1aab7a;
@@ -48,8 +52,8 @@
   --color-gas-l:    #0891b2;
 
   /* ---- Tipografia ---- */
-  --font:         'Nunito', system-ui, sans-serif;
-  --font-mono:    'Nunito Sans', monospace;
+  --font:      'Nunito', system-ui, sans-serif;
+  --font-mono: 'Nunito Sans', monospace;
 
   --fs-micro:   0.62rem;
   --fs-small:   0.76rem;
@@ -59,26 +63,17 @@
   --fs-hero:    3rem;
 
   /* ---- Spacing ---- */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 20px;
-  --sp-6: 24px;
-  --sp-8: 32px;
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
 
   /* ---- Radii ---- */
-  --r-xs:   6px;
-  --r-sm:   10px;
-  --r:      14px;
-  --r-lg:   20px;
-  --r-xl:   28px;
-  --r-pill: 999px;
+  --r-xs: 6px; --r-sm: 10px; --r: 14px;
+  --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
 
   /* ---- Shadows ---- */
-  --shadow-sm:  0 1px 3px rgba(20,60,81,0.08), 0 1px 2px rgba(20,60,81,0.04);
-  --shadow:     0 4px 12px rgba(20,60,81,0.10), 0 1px 3px rgba(20,60,81,0.06);
-  --shadow-lg:  0 12px 32px rgba(20,60,81,0.14), 0 4px 8px rgba(20,60,81,0.08);
+  --shadow-sm: 0 1px 3px rgba(20,60,81,0.08), 0 1px 2px rgba(20,60,81,0.04);
+  --shadow:    0 4px 12px rgba(20,60,81,0.10), 0 1px 3px rgba(20,60,81,0.06);
+  --shadow-lg: 0 12px 32px rgba(20,60,81,0.14), 0 4px 8px rgba(20,60,81,0.08);
 
   /* ---- Transitions ---- */
   --t-fast: 0.14s ease;

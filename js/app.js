@@ -69,26 +69,21 @@ function setupTabs() {
 }
 
 function navigateToPane(pane, animate) {
-  if (pane === _currentPane) return;
-  const deck   = document.getElementById("swipe-deck");
-  const fromIdx = PANE_ORDER.indexOf(_currentPane);
-  const toIdx   = PANE_ORDER.indexOf(pane);
-  const dir     = toIdx > fromIdx ? -1 : 1; // -1 = slide left (go right), +1 = slide right (go left)
+  const track = document.getElementById("deck-track");
+  const toIdx = PANE_ORDER.indexOf(pane);
 
-  if (animate) {
-    deck.style.transition = "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)";
-  } else {
-    deck.style.transition = "none";
-  }
-
-  const offsetPct = toIdx * -100;
-  deck.style.transform = `translateX(${offsetPct}%)`;
+  track.style.transition = animate
+    ? "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)"
+    : "none";
+  // deck-track is 300% wide; each pane is 33.333% of track = 100% of viewport.
+  // Shift by toIdx * 33.333% of track width.
+  track.style.transform = `translateX(${toIdx * -33.3333}%)`;
 
   _currentPane = pane;
   _updateTabUI();
   _updateAccent();
 
-  if (pane === "stats" && _cachedData) renderStats(_cachedData);
+  if (pane === "stats"  && _cachedData) renderStats(_cachedData);
   if (pane === "budget") loadBudget();
 }
 
@@ -100,79 +95,59 @@ function _updateTabUI() {
 
 function _updateAccent() {
   document.documentElement.style.setProperty("--accent", PANE_ACCENT[_currentPane]);
-  // FAB color
-  const fab = document.getElementById("fab-entry");
-  if (_currentPane === "budget") {
-    fab.style.background = PANE_ACCENT.budget;
-  } else if (_currentPane === "stats") {
-    fab.style.background = PANE_ACCENT.stats;
-  } else {
-    fab.style.background = "";
-  }
 }
 
 // ---- Swipe gesture ----
 function setupSwipe() {
-  const deck = document.getElementById("swipe-deck");
-  // Set initial position (home is center = index 1)
-  deck.style.transform = "translateX(-100%)";
-  deck.style.display   = "flex";
-  deck.style.width     = `${PANE_ORDER.length * 100}%`;
-  document.querySelectorAll(".pane").forEach(p => {
-    p.style.width = `${100 / PANE_ORDER.length}%`;
-  });
+  const track = document.getElementById("deck-track");
+  // Start at home (index 1 = shift left by 33.333% of the 300%-wide track)
+  track.style.transform = "translateX(-33.3333%)";
 
+  const deck = document.getElementById("swipe-deck");
   let startX = 0;
   let startY = 0;
   let isDragging = false;
-  let isHorizontal = null;
-  let baseOffset = -100; // home starts at -100%
+  let isHoriz    = null;
+  let basePct    = -33.3333; // home is at index 1
 
   deck.addEventListener("touchstart", e => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isDragging = true;
-    isHorizontal = null;
-    deck.style.transition = "none";
-    baseOffset = PANE_ORDER.indexOf(_currentPane) * -100;
+    isHoriz    = null;
+    track.style.transition = "none";
+    basePct = PANE_ORDER.indexOf(_currentPane) * -33.3333;
   }, { passive: true });
 
   deck.addEventListener("touchmove", e => {
     if (!isDragging) return;
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
-
-    if (isHorizontal === null) {
-      isHorizontal = Math.abs(dx) > Math.abs(dy);
-    }
-    if (!isHorizontal) return;
-
+    if (isHoriz === null) isHoriz = Math.abs(dx) > Math.abs(dy);
+    if (!isHoriz) return;
     e.preventDefault();
-    const pct = (dx / window.innerWidth) * 100;
-    const idx = PANE_ORDER.indexOf(_currentPane);
-    // Resist at edges
-    let dampedPct = pct;
-    if ((idx === 0 && pct > 0) || (idx === PANE_ORDER.length - 1 && pct < 0)) {
-      dampedPct = pct * 0.2;
-    }
-    deck.style.transform = `translateX(${baseOffset + dampedPct}%)`;
+
+    // Convert px drag to % of track (track = 3 × container width)
+    const containerW = deck.offsetWidth;
+    const dragPct    = (dx / containerW) * 33.3333;
+    const idx        = PANE_ORDER.indexOf(_currentPane);
+    const atEdge     = (idx === 0 && dx > 0) || (idx === PANE_ORDER.length - 1 && dx < 0);
+    const damp       = atEdge ? 0.18 : 1;
+    track.style.transform = `translateX(${basePct + dragPct * damp}%)`;
   }, { passive: false });
 
   deck.addEventListener("touchend", e => {
-    if (!isDragging || !isHorizontal) { isDragging = false; return; }
+    if (!isDragging || !isHoriz) { isDragging = false; return; }
     isDragging = false;
-    const dx = e.changedTouches[0].clientX - startX;
-    const threshold = window.innerWidth * 0.22;
+    const dx  = e.changedTouches[0].clientX - startX;
+    const thr = deck.offsetWidth * 0.2;
     const idx = PANE_ORDER.indexOf(_currentPane);
 
-    if (dx < -threshold && idx < PANE_ORDER.length - 1) {
-      navigateToPane(PANE_ORDER[idx + 1], true);
-    } else if (dx > threshold && idx > 0) {
-      navigateToPane(PANE_ORDER[idx - 1], true);
-    } else {
-      // Snap back
-      deck.style.transition = "transform 0.22s ease";
-      deck.style.transform  = `translateX(${baseOffset}%)`;
+    if      (dx < -thr && idx < PANE_ORDER.length - 1) navigateToPane(PANE_ORDER[idx + 1], true);
+    else if (dx >  thr && idx > 0)                     navigateToPane(PANE_ORDER[idx - 1], true);
+    else {
+      track.style.transition = "transform 0.22s ease";
+      track.style.transform  = `translateX(${basePct}%)`;
     }
   }, { passive: true });
 }

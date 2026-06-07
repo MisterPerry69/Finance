@@ -2,9 +2,10 @@
    TIDE — Log full-page
    ============================================ */
 
-let _aiSearchActive = false;
-let _logCurrentYM   = "";   // "YYYY-MM" del mese visualizzato
-let _logSearchActive = false; // true quando c'è una ricerca testo/cat attiva
+let _aiSearchActive  = false;
+let _logCurrentYM    = "";   // "YYYY-MM" del mese visualizzato
+let _logSearchActive = false;
+let _annualVisible   = false;
 
 const MONTH_NAMES = [
   "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
@@ -12,10 +13,12 @@ const MONTH_NAMES = [
 ];
 
 document.addEventListener("DOMContentLoaded", () => {
-  const input    = document.getElementById("finance-search");
-  const clearBtn = document.getElementById("search-clear");
-  const aiToggle = document.getElementById("ai-search-toggle");
-  const aiStatus = document.getElementById("ai-status");
+  const input      = document.getElementById("finance-search");
+  const clearBtn   = document.getElementById("search-clear");
+  const aiToggle   = document.getElementById("ai-search-toggle");
+  const aiStatus   = document.getElementById("ai-status");
+  const catSelect  = document.getElementById("log-cat-filter");
+  const annualBtn  = document.getElementById("log-annual-toggle");
 
   // Init current month
   const now = new Date();
@@ -24,6 +27,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Close log on X
   document.getElementById("log-close-btn").addEventListener("click", closeLogModal);
 
+  // Annual toggle (header left)
+  annualBtn.addEventListener("click", () => {
+    _annualVisible = !_annualVisible;
+    annualBtn.classList.toggle("active", _annualVisible);
+    _toggleAnnualView(_annualVisible);
+  });
+
   // Month navigation
   document.getElementById("log-month-prev").addEventListener("click", () => _stepMonth(-1));
   document.getElementById("log-month-next").addEventListener("click", () => _stepMonth(+1));
@@ -31,6 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Search input
   input.addEventListener("input", () => {
     clearBtn.classList.toggle("hidden", !input.value);
+    // Reset category dropdown when typing
+    if (input.value) catSelect.value = "";
   });
   input.addEventListener("keyup", e => {
     if (e.key === "Enter") {
@@ -43,34 +55,32 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn.addEventListener("click", () => {
     input.value = "";
     clearBtn.classList.add("hidden");
+    catSelect.value = "";
+    catSelect.classList.remove("has-value");
     _logSearchActive = false;
-    document.querySelectorAll(".filter-chip[data-cat]").forEach(b => b.classList.remove("active"));
     _showMonthView();
   });
 
-  // AI toggle
+  // AI toggle (inside search bar)
   aiToggle.addEventListener("click", () => {
     _aiSearchActive = !_aiSearchActive;
     aiStatus.textContent = _aiSearchActive ? "ON" : "OFF";
     aiToggle.classList.toggle("active", _aiSearchActive);
   });
 
-  // Category filter chips
-  document.querySelectorAll(".filter-chip[data-cat]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const wasActive = btn.classList.contains("active");
-      document.querySelectorAll(".filter-chip[data-cat]").forEach(b => b.classList.remove("active"));
-      input.value = "";
-      clearBtn.classList.add("hidden");
-      if (!wasActive) {
-        btn.classList.add("active");
-        _logSearchActive = true;
-        runSearch(btn.dataset.cat);
-      } else {
-        _logSearchActive = false;
-        _showMonthView();
-      }
-    });
+  // Category dropdown
+  catSelect.addEventListener("change", () => {
+    const cat = catSelect.value;
+    input.value = "";
+    clearBtn.classList.add("hidden");
+    catSelect.classList.toggle("has-value", !!cat);
+    if (cat) {
+      _logSearchActive = true;
+      runSearch(cat);
+    } else {
+      _logSearchActive = false;
+      _showMonthView();
+    }
   });
 });
 
@@ -85,21 +95,39 @@ function openLogModal() {
   document.getElementById("search-clear").classList.add("hidden");
   document.getElementById("ai-search-toggle").classList.remove("active");
   document.getElementById("ai-status").textContent = "OFF";
+  document.getElementById("log-cat-filter").value = "";
+  document.getElementById("log-cat-filter").classList.remove("has-value");
+  document.getElementById("log-annual-toggle").classList.remove("active");
+  document.getElementById("log-annual-wrap").classList.add("hidden");
+  document.getElementById("filtered-results").classList.remove("hidden");
   _aiSearchActive  = false;
   _logSearchActive = false;
-  document.querySelectorAll(".filter-chip[data-cat]").forEach(b => b.classList.remove("active"));
+  _annualVisible   = false;
 
   // Init to current month
   const now = new Date();
   _logCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  document.getElementById("log-annual-year").textContent = String(now.getFullYear());
 
   _updateMonthLabel();
   _showMonthView();
-  _loadAnnualSummary();
 }
 
 function closeLogModal() {
   document.getElementById("log-modal").classList.add("hidden");
+}
+
+function _toggleAnnualView(show) {
+  const results    = document.getElementById("filtered-results");
+  const annualWrap = document.getElementById("log-annual-wrap");
+  if (show) {
+    results.classList.add("hidden");
+    annualWrap.classList.remove("hidden");
+    _loadAnnualSummary();
+  } else {
+    annualWrap.classList.add("hidden");
+    results.classList.remove("hidden");
+  }
 }
 
 // ---- Month navigation ----
@@ -117,34 +145,37 @@ function _updateMonthLabel() {
 }
 
 async function _showMonthView() {
+  // If annual is open, close it first
+  if (_annualVisible) {
+    _annualVisible = false;
+    document.getElementById("log-annual-toggle").classList.remove("active");
+    _toggleAnnualView(false);
+  }
   const container  = document.getElementById("filtered-results");
-  const annualWrap = document.getElementById("log-annual-wrap");
   container.innerHTML = '<div class="loading-text">Caricamento...</div>';
-  annualWrap.classList.add("hidden");
   try {
     const data = await apiGet("finance_filter_month", { ym: _logCurrentYM });
     _renderLogResults(data);
-    // Show annual below results if we're in month mode
-    annualWrap.classList.remove("hidden");
   } catch(e) {
     container.innerHTML = '<div class="empty-state">Errore connessione</div>';
   }
 }
 
 async function _loadAnnualSummary() {
-  // Use cached budget allMonths if available, else request
   const months = window._budgetMonths;
   const annualList = document.getElementById("log-annual-list");
-  if (!months || months.length === 0) { annualList.innerHTML = ""; return; }
+  if (!months || months.length === 0) {
+    annualList.innerHTML = '<div class="empty-state">Dati non disponibili — visita Budget prima</div>';
+    return;
+  }
 
   const maxSpent = Math.max(...months.map(m => m.spent || 0), 1);
-  const curMonth = _logCurrentYM.slice(5,7); // "06"
+  const curYM = _logCurrentYM;
 
   annualList.innerHTML = months.map(m => {
-    const ym     = m.ym || "";
-    const mNum   = ym.slice(5,7);
-    const isCur  = mNum === curMonth;
-    const pct    = ((m.spent || 0) / maxSpent * 100).toFixed(0);
+    const ym    = m.ym || "";
+    const isCur = ym === curYM;
+    const pct   = ((m.spent || 0) / maxSpent * 100).toFixed(0);
     return `
       <div class="log-annual-row" data-ym="${escapeAttr(ym)}">
         <span class="log-annual-month${isCur ? " current" : ""}">${escapeHtml(m.labelFull || m.label || ym)}</span>
@@ -155,15 +186,16 @@ async function _loadAnnualSummary() {
       </div>`;
   }).join("");
 
-  // Click on annual row → navigate to that month
   document.querySelectorAll(".log-annual-row[data-ym]").forEach(row => {
     row.addEventListener("click", () => {
       _logCurrentYM = row.dataset.ym;
       _updateMonthLabel();
       _logSearchActive = false;
+      document.getElementById("log-cat-filter").value = "";
+      document.getElementById("log-cat-filter").classList.remove("has-value");
+      document.getElementById("finance-search").value = "";
+      document.getElementById("search-clear").classList.add("hidden");
       _showMonthView();
-      // Scroll results to top
-      document.getElementById("filtered-results").scrollTop = 0;
     });
   });
 }
@@ -171,7 +203,6 @@ async function _loadAnnualSummary() {
 // ---- Search ----
 async function runSearch(query) {
   if (!query) return;
-  document.getElementById("log-annual-wrap").classList.add("hidden");
   const container = document.getElementById("filtered-results");
   container.innerHTML = '<div class="loading-text">Ricerca in corso...</div>';
   try {
@@ -191,5 +222,4 @@ function _renderLogResults(items) {
   }
   container.innerHTML = renderTransactionRows(items);
   if (lucide) lucide.createIcons({ nodes: [container] });
-  // No bindTransactionInfoBtns — tasto rimosso
 }

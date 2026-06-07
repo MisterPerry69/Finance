@@ -20,10 +20,11 @@ function renderBalances(balances, month) {
   }
 
   // Wallet strip
-  document.getElementById("bank-val").textContent   = _formatAmt(parseFloat(balances.bank)   || 0);
-  document.getElementById("tinaba-val").textContent = _formatAmt(parseFloat(balances.tinaba) || 0);
-  document.getElementById("paypal-val").textContent = _formatAmt(parseFloat(balances.paypal) || 0);
-  document.getElementById("cash-val").textContent   = _formatAmt(parseFloat(balances.cash)   || 0);
+  const HIDDEN_VAL = "•••";
+  document.getElementById("bank-val").textContent   = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.bank)   || 0);
+  document.getElementById("tinaba-val").textContent = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.tinaba) || 0);
+  document.getElementById("paypal-val").textContent = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.paypal) || 0);
+  document.getElementById("cash-val").textContent   = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.cash)   || 0);
 
   // Month context
   document.getElementById("month-spent").textContent   = _formatAmt(spent);

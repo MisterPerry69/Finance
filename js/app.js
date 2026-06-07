@@ -251,11 +251,4 @@ function renderTransactionRows(transactions) {
 
 function bindTransactionInfoBtns() { /* rimosso — nota già visibile inline */ }
 
-// Log modal open/close
-function openLogModal() {
-  document.getElementById("log-modal").classList.remove("hidden");
-  if (lucide) lucide.createIcons({ nodes: [document.getElementById("log-modal")] });
-}
-function closeLogModal() {
-  document.getElementById("log-modal").classList.add("hidden");
-}
+// openLogModal / closeLogModal defined in log.js

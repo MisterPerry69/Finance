@@ -217,17 +217,29 @@
 
       <!-- STATS PANE (right) -->
       <div class="pane" id="pane-stats">
+
+        <!-- Month navigator -->
+        <div class="stats-month-nav">
+          <button class="log-month-arrow" id="stats-month-prev" aria-label="Mese precedente">
+            <i data-lucide="chevron-left"></i>
+          </button>
+          <span class="stats-month-label" id="stats-month-label">Giugno 2026</span>
+          <button class="log-month-arrow" id="stats-month-next" aria-label="Mese successivo">
+            <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+
         <!-- KPI row -->
         <div class="stats-kpi-row">
           <div class="kpi-card">
             <div class="kpi-label">Speso</div>
             <div id="stat-total-spent" class="kpi-value neg">—</div>
-            <div class="kpi-sub">questo mese</div>
+            <div class="kpi-sub" id="stat-month-sub">questo mese</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Entrate</div>
             <div id="stat-total-income" class="kpi-value pos">—</div>
-            <div class="kpi-sub">questo mese</div>
+            <div class="kpi-sub">entrate mese</div>
           </div>
         </div>
 
@@ -300,13 +312,16 @@
   <!-- LOG FULL-PAGE -->
   <div id="log-modal" class="log-page hidden">
 
-    <!-- Header -->
+    <!-- Header: annuale a sinistra, titolo centro, X a destra -->
     <div class="log-page-header">
+      <button class="log-annual-toggle" id="log-annual-toggle" aria-label="Riepilogo anno">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Anno</span>
+      </button>
+      <div class="log-page-title">Registro</div>
       <button class="log-close-btn" id="log-close-btn" aria-label="Chiudi">
         <i data-lucide="x"></i>
       </button>
-      <div class="log-page-title">Registro</div>
-      <button class="ai-chip" id="ai-search-toggle">AI <span id="ai-status">OFF</span></button>
     </div>
 
     <!-- Month navigator -->
@@ -320,37 +335,41 @@
       </button>
     </div>
 
-    <!-- Search bar -->
+    <!-- Search bar con AI toggle dentro -->
     <div class="log-search-bar">
       <i data-lucide="search"></i>
       <input type="text" id="finance-search" class="log-search-input" placeholder="Cerca..." autocomplete="off" />
       <button id="search-clear" class="search-clear-btn hidden" aria-label="Cancella">&times;</button>
+      <button class="ai-chip" id="ai-search-toggle">AI <span id="ai-status">OFF</span></button>
     </div>
 
-    <!-- Category filter chips -->
-    <div class="log-filters">
-      <button class="filter-chip" data-cat="CIBO"><i data-lucide="utensils"></i> Cibo</button>
-      <button class="filter-chip" data-cat="CASA"><i data-lucide="home"></i> Casa</button>
-      <button class="filter-chip" data-cat="TECH"><i data-lucide="cpu"></i> Tech</button>
-      <button class="filter-chip" data-cat="SVAGO"><i data-lucide="gamepad-2"></i> Svago</button>
-      <button class="filter-chip" data-cat="TRASPORTI"><i data-lucide="car"></i> Trasporti</button>
-      <button class="filter-chip" data-cat="SALUTE"><i data-lucide="pill"></i> Salute</button>
-      <button class="filter-chip" data-cat="ENTRATE"><i data-lucide="trending-up"></i> Entrate</button>
-      <button class="filter-chip" data-cat="ALTRO"><i data-lucide="layers"></i> Altro</button>
+    <!-- Category filter dropdown -->
+    <div class="log-filter-row">
+      <select id="log-cat-filter" class="log-cat-select">
+        <option value="">Tutte le categorie</option>
+        <option value="CIBO">Cibo</option>
+        <option value="CASA">Casa</option>
+        <option value="TECH">Tech</option>
+        <option value="SVAGO">Svago</option>
+        <option value="TRASPORTI">Trasporti</option>
+        <option value="SALUTE">Salute</option>
+        <option value="ENTRATE">Entrate</option>
+        <option value="RIMBORSO">Rimborso</option>
+        <option value="ALTRO">Altro</option>
+      </select>
     </div>
 
     <!-- Results -->
     <div id="filtered-results" class="log-results"></div>
 
-    <!-- Annual summary (shown when no search active) -->
+    <!-- Annual summary overlay (toggled from header) -->
     <div id="log-annual-wrap" class="log-annual hidden">
       <div class="log-annual-title">
-        <i data-lucide="bar-chart-3"></i> Riepilogo anno
+        <i data-lucide="bar-chart-3"></i> Riepilogo <span id="log-annual-year">2026</span>
       </div>
       <div id="log-annual-list" class="log-annual-list"></div>
     </div>
 
-    <input type="month" id="month-picker" class="month-picker-input" aria-label="Filtra per mese" />
   </div>
 
   <!-- ENTRY MODAL -->

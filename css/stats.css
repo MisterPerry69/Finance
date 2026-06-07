@@ -3,7 +3,25 @@
    ============================================ */
 
 #pane-stats {
-  padding-top: var(--sp-5);
+  padding-top: var(--sp-3);
+}
+
+/* ---- Stats month navigation ---- */
+.stats-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0 var(--sp-4);
+}
+
+.stats-month-label {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  min-width: 140px;
+  text-align: center;
 }
 
 /* Accent override for stats */

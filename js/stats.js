@@ -2,22 +2,91 @@
    CASSA — Stats pane rendering
    ============================================ */
 
-let _chartInstance = null;
+let _statsCurrentYM = "";
+
+const STATS_MONTH_NAMES = [
+  "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
+  "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+  const now = new Date();
+  _statsCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+  document.getElementById("stats-month-prev").addEventListener("click", () => _stepStatsMonth(-1));
+  document.getElementById("stats-month-next").addEventListener("click", () => _stepStatsMonth(+1));
+});
+
+function _stepStatsMonth(delta) {
+  const [y, m] = _statsCurrentYM.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  _statsCurrentYM = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  _updateStatsMonthLabel();
+  _loadStatsForMonth(_statsCurrentYM);
+}
+
+function _updateStatsMonthLabel() {
+  const [y, m] = _statsCurrentYM.split("-").map(Number);
+  const label = `${STATS_MONTH_NAMES[m-1]} ${y}`;
+  document.getElementById("stats-month-label").textContent = label;
+  const now = new Date();
+  const curYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  const sub = document.getElementById("stat-month-sub");
+  if (sub) sub.textContent = _statsCurrentYM === curYM ? "questo mese" : label;
+}
+
+async function _loadStatsForMonth(ym) {
+  try {
+    const data = await apiGet("finance_filter_month", { ym });
+    if (!data) return;
+    // Build a fake month stats from the filtered transactions
+    let spent = 0, income = 0;
+    const cats = {};
+    (data || []).forEach(t => {
+      const amt = parseFloat(t.amt) || 0;
+      const cat = String(t.cat || "ALTRO").toUpperCase();
+      if (cat === "SET_BALANCE" || cat === "TRASFERIMENTO") return;
+      if (amt > 0 && cat !== "RIMBORSO") income += amt;
+      else if (amt < 0) {
+        spent += Math.abs(amt);
+        cats[cat] = (cats[cat] || 0) + Math.abs(amt);
+      }
+    });
+    _renderStatsMonth({ spent, income, categories: cats });
+  } catch(e) {
+    // silently ignore — user can try again
+  }
+}
 
 function renderStats(data) {
   if (!data || !data.currentMonth) return;
+
+  // Init month label + YM if not set
+  const now = new Date();
+  if (!_statsCurrentYM) {
+    _statsCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  }
+  _updateStatsMonthLabel();
+
   const month    = data.currentMonth;
   const balances = data.balances;
+  const total    = parseFloat(balances?.total) || 0;
 
+  _renderStatsMonth(month, total);
+  _renderTrendBars(month);
+  _renderGas(month);
+}
+
+function _renderStatsMonth(month, totalOverride) {
   const income = parseFloat(month.income) || 0;
   const spent  = parseFloat(month.spent)  || 0;
-  const total  = parseFloat(balances.total) || 0;
+  const total  = totalOverride != null ? totalOverride : (parseFloat(_cachedData?.balances?.total) || 0);
 
   // KPI cards
-  document.getElementById("stat-total-spent").textContent  = spent.toFixed(2) + "€";
+  document.getElementById("stat-total-spent").textContent  = spent.toFixed(2)  + "€";
   document.getElementById("stat-total-income").textContent = income.toFixed(2) + "€";
 
-  // Survival
+  // Survival (based on current total balance, not per-month)
   const survivalMonths = spent > 0 ? total / spent : Infinity;
   const survivalPct    = spent > 0 ? Math.min(100, (survivalMonths / 12) * 100) : 100;
   document.getElementById("survival-percentage").textContent = isFinite(survivalMonths)
@@ -51,22 +120,9 @@ function renderStats(data) {
         </div>`;
     }).join("");
   }
-
-  // Trend bars (uses allMonths from budget data if available, else placeholder)
-  _renderTrendBars(month);
-
-  // Gas
-  const gasSpent = parseFloat(month.gasSpent)    || 0;
-  const gasLiters = parseFloat(month.gasLiters)  || 0;
-  const gasAvg   = parseFloat(month.gasAvgPrice) || 0;
-  document.getElementById("gas-spent").textContent     = gasSpent   > 0 ? gasSpent.toFixed(2)   + "€"   : "—";
-  document.getElementById("gas-liters").textContent    = gasLiters  > 0 ? gasLiters.toFixed(1)  + " L"   : "—";
-  document.getElementById("gas-avg-price").textContent = gasAvg     > 0 ? gasAvg.toFixed(3)     + "€/L" : "—";
-  document.getElementById("gas-card").classList.toggle("hidden", gasSpent === 0);
 }
 
 function _renderTrendBars(currentMonth) {
-  // Try to use allMonths from cached budget data; fallback to single bar
   const container = document.getElementById("trend-bars");
   if (!container) return;
 
@@ -88,4 +144,14 @@ function _renderTrendBars(currentMonth) {
         <div class="trend-bar-label">${escapeHtml((m.label || "").slice(0, 3))}</div>
       </div>`;
   }).join("");
+}
+
+function _renderGas(month) {
+  const gasSpent    = parseFloat(month.gasSpent)    || 0;
+  const gasLiters   = parseFloat(month.gasLiters)   || 0;
+  const gasAvg      = parseFloat(month.gasAvgPrice)  || 0;
+  document.getElementById("gas-spent").textContent     = gasSpent   > 0 ? gasSpent.toFixed(2)  + "€"   : "—";
+  document.getElementById("gas-liters").textContent    = gasLiters  > 0 ? gasLiters.toFixed(1) + " L"  : "—";
+  document.getElementById("gas-avg-price").textContent = gasAvg     > 0 ? gasAvg.toFixed(3)    + "€/L" : "—";
+  document.getElementById("gas-card").classList.toggle("hidden", gasSpent === 0);
 }

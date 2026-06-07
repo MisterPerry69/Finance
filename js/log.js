@@ -1,16 +1,21 @@
 /* ============================================
-   FINANCE — Log / search view
+   CASSA — Log modal
    ============================================ */
 
 let _aiSearchActive = false;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const input     = document.getElementById("finance-search");
-  const clearBtn  = document.getElementById("search-clear");
-  const aiToggle  = document.getElementById("ai-search-toggle");
-  const aiStatus  = document.getElementById("ai-status");
+  const input      = document.getElementById("finance-search");
+  const clearBtn   = document.getElementById("search-clear");
+  const aiToggle   = document.getElementById("ai-search-toggle");
+  const aiStatus   = document.getElementById("ai-status");
   const monthPicker = document.getElementById("month-picker");
   const monthBtn    = document.getElementById("month-picker-btn");
+
+  // Close log modal by clicking outside (the overlay)
+  document.getElementById("log-modal").addEventListener("click", e => {
+    if (e.target === document.getElementById("log-modal")) closeLogModal();
+  });
 
   // Search on Enter
   input.addEventListener("keyup", e => {
@@ -18,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") runSearch(input.value.trim());
   });
 
-  // Clear search
+  // Clear
   clearBtn.addEventListener("click", () => {
     input.value = "";
     clearBtn.classList.add("hidden");
@@ -32,13 +37,21 @@ document.addEventListener("DOMContentLoaded", () => {
     aiToggle.classList.toggle("active", _aiSearchActive);
   });
 
-  // Category quick filters
-  document.querySelectorAll(".cat-btn[data-cat]").forEach(btn => {
+  // Category filter chips
+  document.querySelectorAll(".filter-chip[data-cat]").forEach(btn => {
     btn.addEventListener("click", () => {
-      const cat = btn.dataset.cat;
-      input.value = cat;
-      clearBtn.classList.remove("hidden");
-      runSearch(cat);
+      const wasActive = btn.classList.contains("active");
+      document.querySelectorAll(".filter-chip[data-cat]").forEach(b => b.classList.remove("active"));
+      if (!wasActive) {
+        btn.classList.add("active");
+        input.value = btn.dataset.cat;
+        clearBtn.classList.remove("hidden");
+        runSearch(btn.dataset.cat);
+      } else {
+        input.value = "";
+        clearBtn.classList.add("hidden");
+        document.getElementById("filtered-results").innerHTML = "";
+      }
     });
   });
 
@@ -52,31 +65,31 @@ document.addEventListener("DOMContentLoaded", () => {
 async function runSearch(query) {
   if (!query) return;
   const container = document.getElementById("filtered-results");
-  container.innerHTML = `<div class="loading-text">QUERYING${_aiSearchActive ? "_NEURAL" : ""}_DATABASE...</div>`;
+  container.innerHTML = '<div class="loading-text">Ricerca in corso...</div>';
   try {
     const action = _aiSearchActive ? "finance_search_ai" : "finance_search";
-    const data = await apiGet(action, { q: query });
-    renderFilteredResults(data);
+    const data   = await apiGet(action, { q: query });
+    _renderLogResults(data);
   } catch(e) {
-    container.innerHTML = '<div class="empty-state">ERRORE_CONNESSIONE_DATABASE</div>';
+    container.innerHTML = '<div class="empty-state">Errore connessione</div>';
   }
 }
 
 async function runMonthFilter(ym) {
   const container = document.getElementById("filtered-results");
-  container.innerHTML = '<div class="loading-text">QUERYING_DATABASE...</div>';
+  container.innerHTML = '<div class="loading-text">Filtro per mese...</div>';
   try {
     const data = await apiGet("finance_filter_month", { ym });
-    renderFilteredResults(data);
+    _renderLogResults(data);
   } catch(e) {
-    container.innerHTML = '<div class="empty-state">ERRORE_CONNESSIONE_DATABASE</div>';
+    container.innerHTML = '<div class="empty-state">Errore connessione</div>';
   }
 }
 
-function renderFilteredResults(items) {
+function _renderLogResults(items) {
   const container = document.getElementById("filtered-results");
   if (!items || items.length === 0) {
-    container.innerHTML = '<div class="empty-state">NESSUN_RISULTATO_TROVATO</div>';
+    container.innerHTML = '<div class="empty-state">Nessun risultato</div>';
     return;
   }
   container.innerHTML = renderTransactionRows(items);

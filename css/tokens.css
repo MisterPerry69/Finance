@@ -1,53 +1,64 @@
 /* ============================================
-   CASSA — Design tokens
+   CASSA — Design tokens v2
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Sfondo caldo quasi-nero — non piatto */
-  --bg:           #0c0c0b;
-  --bg-warm:      #111110;
-  --surface:      #161614;
-  --surface-2:    #1d1d1b;
-  --surface-3:    #252522;
+  /* ---- Palette base (light) ---- */
+  --bg:           #f0fafa;
+  --bg-card:      #ffffff;
+  --bg-subtle:    #e4f4f5;
+  --bg-deep:      #143C51;
 
-  /* Bordi sottilissimi */
-  --border-ghost: rgba(255,255,255,0.04);
-  --border-soft:  rgba(255,255,255,0.07);
-  --border:       rgba(255,255,255,0.11);
-  --border-strong:rgba(255,255,255,0.18);
+  /* ---- Teal family ---- */
+  --teal:         #25B7BB;
+  --teal-light:   #A6D1D4;
+  --teal-pale:    #ECFCFC;
+  --teal-dim:     rgba(37,183,187,0.12);
+  --teal-border:  rgba(37,183,187,0.3);
+  --slate:        #7E9BA5;
+  --navy:         #143C51;
+  --navy-dim:     rgba(20,60,81,0.08);
 
-  /* Testo */
-  --text:         #f2f0eb;
-  --text-dim:     #9b9890;
-  --text-dim-2:   #5a5855;
+  /* ---- Accents per sezione ---- */
+  --accent-home:   #25B7BB;
+  --accent-stats:  #7E9BA5;
+  --accent-budget: #143C51;
 
-  /* Accent — verde salvia freddo, non fluorescente */
-  --accent:        #4ecca3;
-  --accent-ghost:  rgba(78,204,163,0.07);
-  --accent-dim:    rgba(78,204,163,0.13);
-  --accent-border: rgba(78,204,163,0.28);
-  --accent-dark:   #2a8a6e;
+  /* Accent corrente (cambia via JS) */
+  --accent:        var(--accent-home);
 
-  /* Semantici */
-  --color-positive: #4ecca3;
-  --color-negative: #e05c5c;
-  --color-gas:      #e8a44a;
-  --color-gas-liters: #5bc4e8;
+  /* ---- Testo ---- */
+  --text:          #0f2a35;
+  --text-dim:      #4a6470;
+  --text-dim-2:    #7E9BA5;
+  --text-on-teal:  #ffffff;
+  --text-on-navy:  rgba(255,255,255,0.9);
 
-  /* Tipografia */
-  --font-display: 'DM Serif Display', Georgia, serif;
-  --font-mono:    'DM Mono', 'Courier New', monospace;
-  --font:         'DM Sans', system-ui, sans-serif;
+  /* ---- Borders ---- */
+  --border-ghost:  rgba(37,183,187,0.10);
+  --border-soft:   rgba(20,60,81,0.10);
+  --border:        rgba(20,60,81,0.16);
 
-  --fs-micro:  0.6rem;
-  --fs-small:  0.75rem;
-  --fs-body:   0.875rem;
-  --fs-title:  1.05rem;
-  --fs-display:1.6rem;
+  /* ---- Semantici ---- */
+  --color-positive: #1aab7a;
+  --color-negative: #d94f4f;
+  --color-gas:      #d97706;
+  --color-gas-l:    #0891b2;
 
-  /* Spaziatura */
+  /* ---- Tipografia ---- */
+  --font:         'Nunito', system-ui, sans-serif;
+  --font-mono:    'Nunito Sans', monospace;
+
+  --fs-micro:   0.62rem;
+  --fs-small:   0.76rem;
+  --fs-body:    0.9rem;
+  --fs-title:   1.05rem;
+  --fs-display: 1.7rem;
+  --fs-hero:    3rem;
+
+  /* ---- Spacing ---- */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -56,16 +67,21 @@
   --sp-6: 24px;
   --sp-8: 32px;
 
-  /* Bordi */
-  --radius-xs:  4px;
-  --radius-sm:  8px;
-  --radius:     12px;
-  --radius-lg:  16px;
-  --radius-xl:  20px;
-  --radius-pill:999px;
+  /* ---- Radii ---- */
+  --r-xs:   6px;
+  --r-sm:   10px;
+  --r:      14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-pill: 999px;
 
-  /* Transizioni */
-  --t-fast: 0.13s ease;
-  --t-med:  0.22s ease;
-  --t-slow: 0.38s ease;
+  /* ---- Shadows ---- */
+  --shadow-sm:  0 1px 3px rgba(20,60,81,0.08), 0 1px 2px rgba(20,60,81,0.04);
+  --shadow:     0 4px 12px rgba(20,60,81,0.10), 0 1px 3px rgba(20,60,81,0.06);
+  --shadow-lg:  0 12px 32px rgba(20,60,81,0.14), 0 4px 8px rgba(20,60,81,0.08);
+
+  /* ---- Transitions ---- */
+  --t-fast: 0.14s ease;
+  --t-med:  0.24s ease;
+  --t-slow: 0.4s ease;
 }

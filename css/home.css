@@ -1,112 +1,125 @@
 /* ============================================
-   CASSA — Home view
+   CASSA — Home pane
    ============================================ */
 
-.balance-card {
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: var(--sp-5);
-  margin-bottom: var(--sp-4);
-  position: relative;
-  overflow: hidden;
-}
-/* Thin accent gradient line at top */
-.balance-card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--accent-border) 40%, var(--accent-border) 60%, transparent 100%);
+#pane-home {
+  padding-top: var(--sp-5);
 }
 
-.balance-label {
+/* ---- Hero balance ---- */
+.balance-hero {
+  padding: var(--sp-3) 0 var(--sp-5);
+  text-align: center;
+}
+
+.balance-hero-label {
   font-size: var(--fs-micro);
-  letter-spacing: 0.14em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-dim-2);
-  font-weight: 600;
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
 }
 
-.balance-row {
+.balance-hero-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+
+/* ---- Wallet strip ---- */
+.wallet-strip {
+  display: flex;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
 
-.balance-amount {
-  font-family: var(--font-display);
-  font-size: 3.4rem;
-  font-weight: 400;
-  letter-spacing: -0.03em;
-  color: var(--text);
-  line-height: 1;
+.wallet-chip {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r);
+  padding: var(--sp-2) var(--sp-2);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
 }
 
-.balance-toggle { color: var(--text-dim-2); }
-.balance-toggle svg { width: 18px; height: 18px; }
-
-/* Efficiency bar */
-.efficiency-section {
-  border-top: 1px solid var(--border-ghost);
-  padding-top: var(--sp-3);
-  margin-bottom: var(--sp-4);
-}
-.efficiency-label {
-  font-size: var(--fs-micro);
-  color: var(--text-dim-2);
-  font-weight: 600;
+.wallet-chip-name {
+  font-size: 0.58rem;
+  font-weight: 800;
   letter-spacing: 0.1em;
-  text-align: center;
-  margin-bottom: var(--sp-2);
-}
-.efficiency-bar-outer {
-  width: 100%;
-  height: 3px;
-  background: var(--surface-3);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-.efficiency-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--accent);
-  border-radius: var(--radius-pill);
-  transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+  text-transform: uppercase;
+  color: var(--text-dim-2);
 }
 
-/* Wallet grid */
-.wallet-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-2);
-}
-.wallet-cell {
-  background: var(--bg-warm);
-  border: 1px solid var(--border-ghost);
-  border-radius: var(--radius-sm);
-  padding: var(--sp-2) var(--sp-3);
-}
-.wallet-name {
-  font-size: var(--fs-micro);
-  letter-spacing: 0.12em;
-  color: var(--text-dim-2);
-  font-weight: 600;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-.wallet-val {
-  font-family: var(--font-mono);
-  font-size: var(--fs-body);
-  font-weight: 500;
+.wallet-chip-val {
+  font-size: var(--fs-small);
+  font-weight: 800;
   color: var(--text);
   letter-spacing: -0.01em;
 }
 
-/* Transaction log */
-.transaction-log {
-  padding-bottom: var(--sp-4);
+/* ---- Month context ---- */
+.month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  box-shadow: var(--shadow-sm);
+  gap: var(--sp-3);
+}
+
+.month-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+.month-stat-label {
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim-2);
+}
+.month-stat-val {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  color: var(--text);
+}
+.month-stat-val.neg { color: var(--color-negative); }
+.month-stat-val.pos { color: var(--color-positive); }
+
+.month-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border-soft);
+  flex-shrink: 0;
+}
+
+/* Burn rate bar */
+.burn-bar-wrap { margin-top: var(--sp-2); }
+.burn-bar-label {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--text-dim-2);
+  margin-bottom: var(--sp-1);
+}
+
+/* ---- Recent transactions section ---- */
+.recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
 }

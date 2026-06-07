@@ -1,117 +1,91 @@
 /* ============================================
-   FINANCE — Stats view
+   CASSA — Stats pane rendering
    ============================================ */
 
 let _chartInstance = null;
 
-const CAT_COLORS = {
-  CIBO:       "#f0b429",
-  CASA:       "#00c9a7",
-  TECH:       "#00d4ff",
-  SVAGO:      "#a78bfa",
-  TRASPORTI:  "#fb923c",
-  SALUTE:     "#f472b6",
-  ENTRATE:    "#4ade80",
-  ALTRO:      "#6b7280",
-  RIMBORSO:   "#34d399",
-};
-
 function renderStats(data) {
   if (!data || !data.currentMonth) return;
-  const month = data.currentMonth;
+  const month    = data.currentMonth;
   const balances = data.balances;
 
-  const income  = parseFloat(month.income);
-  const spent   = parseFloat(month.spent);
-  const total   = parseFloat(balances.total);
+  const income = parseFloat(month.income) || 0;
+  const spent  = parseFloat(month.spent)  || 0;
+  const total  = parseFloat(balances.total) || 0;
 
+  // KPI cards
   document.getElementById("stat-total-spent").textContent  = spent.toFixed(2) + "€";
   document.getElementById("stat-total-income").textContent = income.toFixed(2) + "€";
 
-  // Survival index: months left at current burn rate
+  // Survival
   const survivalMonths = spent > 0 ? total / spent : Infinity;
-  const survivalPct = spent > 0 ? Math.min(100, (survivalMonths / 12) * 100) : 100;
+  const survivalPct    = spent > 0 ? Math.min(100, (survivalMonths / 12) * 100) : 100;
   document.getElementById("survival-percentage").textContent = isFinite(survivalMonths)
     ? survivalMonths.toFixed(1) + " mesi"
     : "∞";
   document.getElementById("survival-bar-fill").style.width = survivalPct + "%";
 
-  // Top 3 expenses
-  const cats = month.categories || {};
-  const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+  // Top categories
+  const cats   = month.categories || {};
+  const sorted = Object.entries(cats)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  const maxAmt  = sorted.length > 0 ? sorted[0][1] : 1;
   const topList = document.getElementById("top-expenses-list");
+
   if (sorted.length === 0) {
     topList.innerHTML = '<div class="empty-state">Nessuna spesa questo mese</div>';
   } else {
-    topList.innerHTML = sorted.slice(0, 3).map(([cat, amt]) =>
-      `<div class="top-expense-row">
-        <span class="top-expense-name">${escapeHtml(cat)}</span>
-        <span class="top-expense-amount">${parseFloat(amt).toFixed(2)}€</span>
-      </div>`
-    ).join("");
+    topList.innerHTML = sorted.slice(0, 5).map(([cat, amt]) => {
+      const pct   = ((amt / maxAmt) * 100).toFixed(0);
+      const color = catColor(cat);
+      return `
+        <div class="cat-breakdown-row">
+          <div class="cat-dot" style="background:${color}"></div>
+          <span class="cat-breakdown-name">${escapeHtml(cat)}</span>
+          <div class="cat-breakdown-bar-wrap">
+            <div class="cat-breakdown-bar" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <span class="cat-breakdown-amount">${parseFloat(amt).toFixed(2)}€</span>
+        </div>`;
+    }).join("");
   }
 
-  // Category chart
-  renderCategoryChart(cats);
+  // Trend bars (uses allMonths from budget data if available, else placeholder)
+  _renderTrendBars(month);
 
   // Gas
-  const gasSpent = parseFloat(month.gasSpent) || 0;
-  const gasLiters = parseFloat(month.gasLiters) || 0;
-  const gasAvg = parseFloat(month.gasAvgPrice) || 0;
-  document.getElementById("gas-spent").textContent     = gasSpent > 0   ? gasSpent.toFixed(2) + "€"   : "—";
-  document.getElementById("gas-liters").textContent    = gasLiters > 0  ? gasLiters.toFixed(1) + " L"  : "—";
-  document.getElementById("gas-avg-price").textContent = gasAvg > 0     ? gasAvg.toFixed(3) + "€/L"    : "—";
+  const gasSpent = parseFloat(month.gasSpent)    || 0;
+  const gasLiters = parseFloat(month.gasLiters)  || 0;
+  const gasAvg   = parseFloat(month.gasAvgPrice) || 0;
+  document.getElementById("gas-spent").textContent     = gasSpent   > 0 ? gasSpent.toFixed(2)   + "€"   : "—";
+  document.getElementById("gas-liters").textContent    = gasLiters  > 0 ? gasLiters.toFixed(1)  + " L"   : "—";
+  document.getElementById("gas-avg-price").textContent = gasAvg     > 0 ? gasAvg.toFixed(3)     + "€/L" : "—";
+  document.getElementById("gas-card").classList.toggle("hidden", gasSpent === 0);
 }
 
-function renderCategoryChart(categories) {
-  const canvas = document.getElementById("categoryChart");
-  if (!canvas) return;
-  const entries = Object.entries(categories || {}).filter(([, v]) => v > 0);
-  if (entries.length === 0) return;
+function _renderTrendBars(currentMonth) {
+  // Try to use allMonths from cached budget data; fallback to single bar
+  const container = document.getElementById("trend-bars");
+  if (!container) return;
 
-  const labels = entries.map(([k]) => k);
-  const values = entries.map(([, v]) => parseFloat(v));
-  const colors = labels.map(k => CAT_COLORS[k] || "#555");
-
-  if (_chartInstance) {
-    _chartInstance.data.labels = labels;
-    _chartInstance.data.datasets[0].data = values;
-    _chartInstance.data.datasets[0].backgroundColor = colors;
-    _chartInstance.update();
+  const allMonths = window._budgetMonths;
+  if (!allMonths || allMonths.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:var(--sp-3)">Dati non ancora disponibili</div>';
     return;
   }
 
-  _chartInstance = new Chart(canvas, {
-    type: "doughnut",
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: colors,
-        borderColor: "transparent",
-        borderWidth: 0,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "65%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: {
-            color: "#888",
-            font: { family: "Ubuntu", size: 10 },
-            boxWidth: 10,
-            padding: 8,
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.parsed.toFixed(2)}€`
-          }
-        }
-      }
-    }
-  });
+  const recent = allMonths.slice(-6);
+  const maxSpent = Math.max(...recent.map(m => m.spent || 0), 1);
+
+  container.innerHTML = recent.map((m, i) => {
+    const pct = ((m.spent || 0) / maxSpent * 100).toFixed(0);
+    const isCurrent = i === recent.length - 1;
+    return `
+      <div class="trend-bar-col">
+        <div class="trend-bar${isCurrent ? " current" : ""}" style="height:${pct}%"></div>
+        <div class="trend-bar-label">${escapeHtml((m.label || "").slice(0, 3))}</div>
+      </div>`;
+  }).join("");
 }

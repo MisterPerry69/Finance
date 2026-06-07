@@ -24,7 +24,7 @@ function renderBalances(balances, month) {
 
   // Efficiency bar: % spent of income this month
   const pct = income > 0 ? Math.min(100, (spent / income) * 100) : 0;
-  document.getElementById("efficiency-fill").style.width = pct + "%";
+  document.getElementById("efficiency-fill").style.setProperty("width", pct + "%");
   let label;
   if (income === 0) {
     label = "NESSUNA_ENTRATA";

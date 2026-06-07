@@ -1,11 +1,11 @@
 {
-  "name": "Finance",
-  "short_name": "Finance",
+  "name": "Cassa",
+  "short_name": "Cassa",
   "description": "Gestione fondi personale",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#0c0c0b",
+  "theme_color": "#0c0c0b",
   "orientation": "portrait",
   "icons": [
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },

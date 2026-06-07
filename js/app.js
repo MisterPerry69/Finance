@@ -9,30 +9,37 @@ let _balanceHidden = false;
 
 // ---- Init ----
 window.addEventListener("DOMContentLoaded", async () => {
-  runSplash(async () => {
-    document.getElementById("app").classList.remove("hidden");
-    await loadData();
-  });
-
   setupNav();
   setupAnalystBubble();
+
+  // Load data and splash run in parallel; splash waits for both before fading
+  const [_, dataResult] = await Promise.all([
+    _animateSplashBar(),
+    loadData().then(() => "ok").catch(() => "ok"),
+  ]);
+
+  const splash = document.getElementById("splash");
+  const bar = document.getElementById("splash-bar");
+  bar.style.width = "100%";
+  setTimeout(() => {
+    splash.classList.add("fade-out");
+    setTimeout(() => {
+      splash.style.display = "none";
+      document.getElementById("app").classList.remove("hidden");
+    }, 480);
+  }, 160);
 });
 
-function runSplash(onDone) {
-  const bar = document.getElementById("splash-bar");
-  const splash = document.getElementById("splash");
-  let pct = 0;
-  const iv = setInterval(() => {
-    pct += Math.random() * 18 + 5;
-    if (pct >= 100) { pct = 100; clearInterval(iv); }
-    bar.style.width = pct + "%";
-    if (pct >= 100) {
-      setTimeout(() => {
-        splash.classList.add("fade-out");
-        setTimeout(() => { splash.style.display = "none"; onDone(); }, 400);
-      }, 200);
-    }
-  }, 80);
+function _animateSplashBar() {
+  return new Promise(resolve => {
+    const bar = document.getElementById("splash-bar");
+    let pct = 0;
+    const iv = setInterval(() => {
+      pct += Math.random() * 14 + 4;
+      if (pct >= 88) { pct = 88; clearInterval(iv); resolve(); }
+      bar.style.width = pct + "%";
+    }, 90);
+  });
 }
 
 // ---- Navigation ----
@@ -160,9 +167,9 @@ function bindTransactionInfoBtns(container) {
         const cleanNote = data.note || "NESSUNA NOTA";
         const cleanDesc = data.desc || "TRANSAZIONE";
         showAnalyst(`
-          <div style="font-size:0.7rem;color:var(--text-dim-2);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase;">Nota su</div>
-          <div style="color:var(--accent);font-weight:700;margin-bottom:6px;">${escapeHtml(cleanDesc.toUpperCase())}</div>
-          <div style="color:var(--text);font-style:italic;border-left:2px solid var(--border);padding-left:8px;font-size:0.85rem;">"${escapeHtml(cleanNote.toUpperCase())}"</div>
+          <div class="analyst-note-label">Nota su</div>
+          <div class="analyst-note-desc">${escapeHtml(cleanDesc.toUpperCase())}</div>
+          <div class="analyst-note-text">"${escapeHtml(cleanNote.toUpperCase())}"</div>
         `, 8000);
       } catch(ex) {}
     });

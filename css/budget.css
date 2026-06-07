@@ -1,5 +1,5 @@
 /* ============================================
-   FINANCE — Budget view
+   CASSA — Budget view
    ============================================ */
 
 .budget-tabs {
@@ -16,7 +16,7 @@
   border: none;
   color: var(--text-dim-2);
   font-size: var(--fs-micro);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   transition: background var(--t-fast), color var(--t-fast);
@@ -32,11 +32,11 @@
   margin-bottom: var(--sp-3);
 }
 .budget-big-number {
-  font-size: 2rem;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 400;
   letter-spacing: -0.02em;
   color: var(--accent);
-  font-variant-numeric: tabular-nums;
   margin: var(--sp-2) 0;
 }
 .budget-big-number.year-color { color: var(--color-gas); }
@@ -48,7 +48,7 @@
 
 .budget-bar-outer {
   width: 100%;
-  height: 6px;
+  height: 3px;
   background: var(--surface-3);
   border-radius: var(--radius-pill);
   overflow: hidden;
@@ -58,7 +58,7 @@
   width: 0%;
   background: var(--accent);
   border-radius: var(--radius-pill);
-  transition: width 0.8s ease;
+  transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .budget-cat-list { display: flex; flex-direction: column; }
@@ -67,7 +67,7 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-ghost);
   gap: var(--sp-3);
 }
 .budget-cat-row:last-child { border-bottom: none; }
@@ -79,10 +79,10 @@
   letter-spacing: 0.05em;
 }
 .budget-cat-amount {
+  font-family: var(--font-mono);
   font-size: var(--fs-small);
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-negative);
-  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
@@ -92,8 +92,8 @@
   border-color: var(--color-gas);
   color: var(--color-gas);
 }
-.year-btn:active { background: rgba(255,149,0,0.1); }
-.year-ai { background: rgba(255,149,0,0.04); border-color: rgba(255,149,0,0.25); }
+.year-btn:active { background: rgba(232,164,74,0.08); }
+.year-ai { background: rgba(232,164,74,0.04); border-color: rgba(232,164,74,0.22); }
 
 .budget-months-list { display: flex; flex-direction: column; }
 .budget-month-row {
@@ -101,8 +101,12 @@
   justify-content: space-between;
   padding: var(--sp-1) 0;
   font-size: var(--fs-small);
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-ghost);
   color: var(--text-dim);
 }
 .budget-month-row:last-child { border-bottom: none; }
-.budget-month-amount { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+.budget-month-amount {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text);
+}

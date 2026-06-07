@@ -1,41 +1,51 @@
 /* ============================================
-   FINANCE — Design tokens
+   CASSA — Design tokens
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
 :root {
-  /* Colori base */
-  --bg:           #0a0a0a;
-  --surface:      #111111;
-  --surface-2:    #181818;
-  --surface-3:    #222222;
-  --border-soft:  #1e1e1e;
-  --border:       #2a2a2a;
-  --border-strong:#3a3a3a;
+  /* Sfondo caldo quasi-nero — non piatto */
+  --bg:           #0c0c0b;
+  --bg-warm:      #111110;
+  --surface:      #161614;
+  --surface-2:    #1d1d1b;
+  --surface-3:    #252522;
+
+  /* Bordi sottilissimi */
+  --border-ghost: rgba(255,255,255,0.04);
+  --border-soft:  rgba(255,255,255,0.07);
+  --border:       rgba(255,255,255,0.11);
+  --border-strong:rgba(255,255,255,0.18);
 
   /* Testo */
-  --text:         #f0f0f0;
-  --text-dim:     #888888;
-  --text-dim-2:   #555555;
+  --text:         #f2f0eb;
+  --text-dim:     #9b9890;
+  --text-dim-2:   #5a5855;
 
-  /* Accent — giallo-ambra per Finance (diverso dal teal di Lift) */
-  --accent:       #f0b429;
-  --accent-ghost: rgba(240, 180, 41, 0.10);
-  --accent-dim:   rgba(240, 180, 41, 0.12);
-  --accent-border:rgba(240, 180, 41, 0.35);
+  /* Accent — verde salvia freddo, non fluorescente */
+  --accent:        #4ecca3;
+  --accent-ghost:  rgba(78,204,163,0.07);
+  --accent-dim:    rgba(78,204,163,0.13);
+  --accent-border: rgba(78,204,163,0.28);
+  --accent-dark:   #2a8a6e;
 
   /* Semantici */
-  --color-positive: #4ade80;
-  --color-negative: #ff4d6d;
-  --color-gas:      #ff9500;
-  --color-gas-liters: #00d4ff;
+  --color-positive: #4ecca3;
+  --color-negative: #e05c5c;
+  --color-gas:      #e8a44a;
+  --color-gas-liters: #5bc4e8;
 
   /* Tipografia */
-  --font: 'Ubuntu', sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+  --font:         'DM Sans', system-ui, sans-serif;
+
   --fs-micro:  0.6rem;
   --fs-small:  0.75rem;
   --fs-body:   0.875rem;
-  --fs-title:  1.1rem;
-  --fs-display:1.75rem;
+  --fs-title:  1.05rem;
+  --fs-display:1.6rem;
 
   /* Spaziatura */
   --sp-1: 4px;
@@ -44,14 +54,18 @@
   --sp-4: 16px;
   --sp-5: 20px;
   --sp-6: 24px;
+  --sp-8: 32px;
 
   /* Bordi */
+  --radius-xs:  4px;
   --radius-sm:  8px;
   --radius:     12px;
   --radius-lg:  16px;
+  --radius-xl:  20px;
   --radius-pill:999px;
 
   /* Transizioni */
-  --t-fast: 0.15s ease;
-  --t-med:  0.25s ease;
+  --t-fast: 0.13s ease;
+  --t-med:  0.22s ease;
+  --t-slow: 0.38s ease;
 }

@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Tide</title>
   <link rel="manifest" href="manifest.json" />
+  <!-- Favicon faro SVG inline -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="css/tokens.css" />
@@ -295,38 +297,60 @@
 
   </div><!-- /app -->
 
-  <!-- LOG MODAL -->
-  <div id="log-modal" class="log-modal-overlay hidden">
-    <div class="log-modal-box">
-      <div class="log-modal-handle"></div>
+  <!-- LOG FULL-PAGE -->
+  <div id="log-modal" class="log-page hidden">
 
-      <div class="log-search-bar">
-        <i data-lucide="search"></i>
-        <input type="text" id="finance-search" class="log-search-input" placeholder="Cerca nel registro..." autocomplete="off" />
-        <button id="search-clear" class="search-clear-btn hidden" aria-label="Cancella">&times;</button>
-      </div>
-
-      <div class="log-filters">
-        <button class="filter-chip" data-cat="CIBO"><i data-lucide="utensils"></i> Cibo</button>
-        <button class="filter-chip" data-cat="CASA"><i data-lucide="home"></i> Casa</button>
-        <button class="filter-chip" data-cat="TECH"><i data-lucide="cpu"></i> Tech</button>
-        <button class="filter-chip" data-cat="SVAGO"><i data-lucide="gamepad-2"></i> Svago</button>
-        <button class="filter-chip" data-cat="TRASPORTI"><i data-lucide="car"></i> Trasporti</button>
-        <button class="filter-chip" data-cat="SALUTE"><i data-lucide="pill"></i> Salute</button>
-        <button class="filter-chip" data-cat="ENTRATE"><i data-lucide="trending-up"></i> Entrate</button>
-        <button class="filter-chip" data-cat="ALTRO"><i data-lucide="layers"></i> Altro</button>
-        <button class="ai-chip" id="ai-search-toggle">AI <span id="ai-status">OFF</span></button>
-      </div>
-
-      <div class="month-filter-wrap">
-        <input type="month" id="month-picker" class="month-picker-input" aria-label="Filtra per mese" />
-        <button id="month-picker-btn" class="filter-chip">
-          <i data-lucide="calendar"></i> Filtra per mese
-        </button>
-      </div>
-
-      <div id="filtered-results" class="log-results"></div>
+    <!-- Header -->
+    <div class="log-page-header">
+      <button class="log-close-btn" id="log-close-btn" aria-label="Chiudi">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="log-page-title">Registro</div>
+      <button class="ai-chip" id="ai-search-toggle">AI <span id="ai-status">OFF</span></button>
     </div>
+
+    <!-- Month navigator -->
+    <div class="log-month-nav">
+      <button class="log-month-arrow" id="log-month-prev" aria-label="Mese precedente">
+        <i data-lucide="chevron-left"></i>
+      </button>
+      <button class="log-month-label" id="log-month-label">Giugno 2026</button>
+      <button class="log-month-arrow" id="log-month-next" aria-label="Mese successivo">
+        <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Search bar -->
+    <div class="log-search-bar">
+      <i data-lucide="search"></i>
+      <input type="text" id="finance-search" class="log-search-input" placeholder="Cerca..." autocomplete="off" />
+      <button id="search-clear" class="search-clear-btn hidden" aria-label="Cancella">&times;</button>
+    </div>
+
+    <!-- Category filter chips -->
+    <div class="log-filters">
+      <button class="filter-chip" data-cat="CIBO"><i data-lucide="utensils"></i> Cibo</button>
+      <button class="filter-chip" data-cat="CASA"><i data-lucide="home"></i> Casa</button>
+      <button class="filter-chip" data-cat="TECH"><i data-lucide="cpu"></i> Tech</button>
+      <button class="filter-chip" data-cat="SVAGO"><i data-lucide="gamepad-2"></i> Svago</button>
+      <button class="filter-chip" data-cat="TRASPORTI"><i data-lucide="car"></i> Trasporti</button>
+      <button class="filter-chip" data-cat="SALUTE"><i data-lucide="pill"></i> Salute</button>
+      <button class="filter-chip" data-cat="ENTRATE"><i data-lucide="trending-up"></i> Entrate</button>
+      <button class="filter-chip" data-cat="ALTRO"><i data-lucide="layers"></i> Altro</button>
+    </div>
+
+    <!-- Results -->
+    <div id="filtered-results" class="log-results"></div>
+
+    <!-- Annual summary (shown when no search active) -->
+    <div id="log-annual-wrap" class="log-annual hidden">
+      <div class="log-annual-title">
+        <i data-lucide="bar-chart-3"></i> Riepilogo anno
+      </div>
+      <div id="log-annual-list" class="log-annual-list"></div>
+    </div>
+
+    <input type="month" id="month-picker" class="month-picker-input" aria-label="Filtra per mese" />
   </div>
 
   <!-- ENTRY MODAL -->

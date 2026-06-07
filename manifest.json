@@ -2,7 +2,7 @@
   "name": "Tide",
   "short_name": "Tide",
   "description": "I tuoi flussi, chiari",
-  "start_url": "/",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#143C51",
   "theme_color": "#143C51",

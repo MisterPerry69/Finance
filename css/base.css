@@ -327,17 +327,6 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 
-.trans-info-btn {
-  background: none;
-  border: none;
-  padding: 2px;
-  color: var(--text-dim-2);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: color var(--t-fast);
-}
-.trans-info-btn:active { color: var(--teal); }
-.trans-info-btn svg { width: 13px; height: 13px; }
 
 /* ---- Inline link button ---- */
 .link-btn {

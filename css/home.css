@@ -134,5 +134,5 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--sp-3);
+  margin: var(--sp-3);
 }

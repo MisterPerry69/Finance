@@ -231,10 +231,9 @@ function renderTransactionRows(transactions) {
     return '<div class="empty-state">Nessuna transazione</div>';
   }
   return transactions.map(t => {
-    const amt    = parseFloat(t.amt);
-    const isPos  = amt >= 0;
+    const amt     = parseFloat(t.amt);
+    const isPos   = amt >= 0;
     const hasNote = t.note && t.note.trim();
-    const noteData = encodeURIComponent(JSON.stringify({ note: t.note || "", desc: t.desc || "" }));
     return `
       <div class="trans-row">
         <div class="trans-icon-wrap"><i data-lucide="${catIcon(t.cat)}"></i></div>
@@ -245,28 +244,12 @@ function renderTransactionRows(transactions) {
         </div>
         <div class="trans-right">
           <span class="trans-amount ${isPos ? "positive" : "negative"}">${isPos ? "+" : ""}${amt.toFixed(2)}€</span>
-          ${hasNote ? `<button class="trans-info-btn" data-note="${escapeAttr(noteData)}" aria-label="Mostra nota"><i data-lucide="info"></i></button>` : ""}
         </div>
       </div>`;
   }).join("");
 }
 
-function bindTransactionInfoBtns(container) {
-  container.querySelectorAll(".trans-info-btn[data-note]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      try {
-        const data      = JSON.parse(decodeURIComponent(btn.dataset.note));
-        const cleanNote = data.note || "Nessuna nota";
-        const cleanDesc = data.desc || "Transazione";
-        showAnalyst(`
-          <div class="analyst-note-label">Nota su</div>
-          <div class="analyst-note-desc">${escapeHtml(cleanDesc)}</div>
-          <div class="analyst-note-text">"${escapeHtml(cleanNote)}"</div>
-        `, 8000);
-      } catch(ex) {}
-    });
-  });
-}
+function bindTransactionInfoBtns() { /* rimosso — nota già visibile inline */ }
 
 // Log modal open/close
 function openLogModal() {

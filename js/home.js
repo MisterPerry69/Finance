@@ -64,7 +64,6 @@ function renderTransactionLog(transactions) {
   if (!log) return;
   log.innerHTML = renderTransactionRows(transactions);
   if (lucide) lucide.createIcons({ nodes: [log] });
-  bindTransactionInfoBtns(log);
 }
 
 function _formatAmt(n) {

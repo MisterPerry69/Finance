@@ -320,6 +320,10 @@ a { color: inherit; text-decoration: none; }
 }
 .trans-amount.positive { color: var(--color-positive); }
 .trans-amount.negative { color: var(--color-negative); }
+.trans-amount.pending  { color: var(--text-dim-2); font-size: var(--fs-title); }
+
+.pending-row { opacity: 0.72; }
+.pending-row .trans-icon-wrap { background: var(--navy-dim); color: var(--text-dim-2); }
 
 .trans-date {
   font-size: var(--fs-micro);

@@ -231,20 +231,22 @@ function renderTransactionRows(transactions) {
     return '<div class="empty-state">Nessuna transazione</div>';
   }
   return transactions.map(t => {
-    const amt     = parseFloat(t.amt);
-    const isPos   = amt >= 0;
-    const hasNote = t.note && t.note.trim();
+    const isPending = String(t.cat).toUpperCase() === "AI_PENDING";
+    const amt       = parseFloat(t.amt);
+    const isPos     = amt >= 0;
+    const hasNote   = t.note && t.note.trim();
+    const amtStr    = isPending
+      ? '<span class="trans-amount pending">~</span>'
+      : `<span class="trans-amount ${isPos ? "positive" : "negative"}">${isPos ? "+" : ""}${amt.toFixed(2)}€</span>`;
     return `
-      <div class="trans-row">
+      <div class="trans-row${isPending ? " pending-row" : ""}">
         <div class="trans-icon-wrap"><i data-lucide="${catIcon(t.cat)}"></i></div>
         <div class="trans-body">
           <div class="trans-desc">${escapeHtml(t.desc)}</div>
-          <div class="trans-meta">${escapeHtml(t.cat)}${t.date ? " · " + escapeHtml(t.date) : ""}</div>
+          <div class="trans-meta">${isPending ? "⏳ DA CATEGORIZZARE" : escapeHtml(t.cat)}${t.date ? " · " + escapeHtml(t.date) : ""}</div>
           ${hasNote ? `<div class="trans-note-tag">${escapeHtml(t.note)}</div>` : ""}
         </div>
-        <div class="trans-right">
-          <span class="trans-amount ${isPos ? "positive" : "negative"}">${isPos ? "+" : ""}${amt.toFixed(2)}€</span>
-        </div>
+        <div class="trans-right">${amtStr}</div>
       </div>`;
   }).join("");
 }

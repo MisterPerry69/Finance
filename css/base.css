@@ -325,6 +325,25 @@ a { color: inherit; text-decoration: none; }
 .pending-row { opacity: 0.72; }
 .pending-row .trans-icon-wrap { background: var(--navy-dim); color: var(--text-dim-2); }
 
+.trans-edit-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-dim-2);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity var(--t-fast), color var(--t-fast), background var(--t-fast);
+  cursor: pointer;
+}
+.trans-edit-btn svg { width: 13px; height: 13px; stroke-width: 2; }
+.trans-row:hover .trans-edit-btn,
+.trans-row:focus-within .trans-edit-btn { opacity: 1; }
+.trans-edit-btn:hover { color: var(--teal); background: var(--teal-dim); }
+
 .trans-date {
   font-size: var(--fs-micro);
   color: var(--text-dim-2);

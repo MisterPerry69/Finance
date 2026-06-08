@@ -5,7 +5,7 @@
 let _aiSearchActive  = false;
 let _logCurrentYM    = "";
 let _logSearchActive = false;
-let _lastLogData     = [];  // cache per filtro wallet lato client
+let _lastLogData     = [];  // cache per filtro wallet lato client; sync su window in _renderLogResults
 
 const MONTH_NAMES = [
   "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
@@ -151,7 +151,7 @@ async function runSearch(query) {
 }
 
 function _renderLogResults(items, updateCache) {
-  if (updateCache) _lastLogData = items || [];
+  if (updateCache) { _lastLogData = items || []; window._lastLogData = _lastLogData; }
   const wallet = document.getElementById("log-wallet-filter").value;
   const toShow = wallet
     ? (items || []).filter(t => String(t.wallet).toUpperCase() === wallet)
@@ -164,4 +164,17 @@ function _renderLogResults(items, updateCache) {
   }
   container.innerHTML = renderTransactionRows(toShow);
   if (lucide) lucide.createIcons({ nodes: [container] });
+}
+
+// Chiamata da edit.js dopo il salvataggio — ricarica la vista corrente
+function _refreshAfterEdit() {
+  const q = document.getElementById("finance-search").value.trim();
+  if (q) {
+    // Ricarica la ricerca
+    const useAI = _aiSearchActive;
+    const action = useAI ? "finance_search_ai" : "finance_search";
+    apiPost(action, { q }).then(rows => _renderLogResults(rows, true)).catch(console.error);
+  } else if (_logCurrentYM) {
+    apiPost("finance_filter_month", { ym: _logCurrentYM }).then(rows => _renderLogResults(rows, true)).catch(console.error);
+  }
 }

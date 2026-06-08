@@ -240,8 +240,10 @@ function renderTransactionRows(transactions) {
     const amtStr    = isPending
       ? '<span class="trans-amount pending">~</span>'
       : `<span class="trans-amount ${isPos ? "positive" : "negative"}">${isPos ? "+" : ""}${amt.toFixed(2)}€</span>`;
+    const rowIdx = t.rowIndex || "";
     return `
-      <div class="trans-row${isPending ? " pending-row" : ""}">
+      <div class="trans-row${isPending ? " pending-row" : ""}" data-row-index="${rowIdx}">
+        <button class="trans-edit-btn" data-row-index="${rowIdx}" aria-label="Modifica transazione"><i data-lucide="pencil"></i></button>
         <div class="trans-icon-wrap"><i data-lucide="${catIcon(t.cat)}"></i></div>
         <div class="trans-body">
           <div class="trans-desc">${escapeHtml(t.desc)}</div>

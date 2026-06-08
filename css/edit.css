@@ -1,0 +1,77 @@
+/* ============================================
+   CASSA — Edit transaction modal
+   ============================================ */
+
+.edit-modal-box {
+  padding: 0;
+  overflow: hidden;
+}
+
+.edit-modal-body {
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.edit-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-label {
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim-2);
+}
+
+.edit-input {
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  padding: 10px 12px;
+  width: 100%;
+  transition: border-color var(--t-fast);
+}
+.edit-input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.edit-input option { background: var(--bg-card); }
+
+.edit-modal-footer {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5) calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border-ghost);
+}
+
+.btn-pill {
+  flex: 1;
+  padding: var(--sp-3) 0;
+  border-radius: var(--r-pill);
+  font-family: var(--font);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all var(--t-fast);
+  cursor: pointer;
+  border: none;
+}
+.btn-pill.btn-secondary {
+  background: var(--bg-subtle);
+  color: var(--text-dim-2);
+}
+.btn-pill.btn-primary {
+  background: var(--teal);
+  color: var(--bg);
+}
+.btn-pill:disabled { opacity: 0.5; cursor: default; }

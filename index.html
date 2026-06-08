@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/budget.css" />
   <link rel="stylesheet" href="css/log.css" />
   <link rel="stylesheet" href="css/entry.css" />
+  <link rel="stylesheet" href="css/edit.css" />
 </head>
 <body>
 
@@ -487,11 +488,68 @@
   </div>
 
   <script src="js/api.js"></script>
+  <!-- EDIT TRANSACTION MODAL -->
+  <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Modifica transazione">
+    <div class="modal-box edit-modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Modifica voce</div>
+        <button class="icon-btn modal-close" id="edit-modal-close" aria-label="Chiudi">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="edit-modal-body">
+        <input type="hidden" id="edit-row-index">
+        <div class="edit-field-group">
+          <label class="edit-label">Importo</label>
+          <input type="number" id="edit-amount" class="edit-input" step="0.01" placeholder="0.00">
+        </div>
+        <div class="edit-field-group">
+          <label class="edit-label">Conto</label>
+          <select id="edit-wallet" class="edit-input">
+            <option value="BANK">Bank</option>
+            <option value="TINABA">Tinaba</option>
+            <option value="PAYPAL">PayPal</option>
+            <option value="CASH">Cash</option>
+          </select>
+        </div>
+        <div class="edit-field-group">
+          <label class="edit-label">Categoria</label>
+          <select id="edit-cat" class="edit-input">
+            <option value="CIBO">Cibo</option>
+            <option value="CASA">Casa</option>
+            <option value="TECH">Tech</option>
+            <option value="SHOPPING">Shopping</option>
+            <option value="SVAGO">Svago</option>
+            <option value="TRASPORTI">Trasporti</option>
+            <option value="SALUTE">Salute</option>
+            <option value="ENTRATE">Entrate</option>
+            <option value="RIMBORSO">Rimborso</option>
+            <option value="TRASFERIMENTO">Trasferimento</option>
+            <option value="ALTRO">Altro</option>
+          </select>
+        </div>
+        <div class="edit-field-group">
+          <label class="edit-label">Descrizione</label>
+          <input type="text" id="edit-desc" class="edit-input" placeholder="Descrizione">
+        </div>
+        <div class="edit-field-group">
+          <label class="edit-label">Note</label>
+          <input type="text" id="edit-note" class="edit-input" placeholder="Note (opzionale)">
+        </div>
+      </div>
+      <div class="edit-modal-footer">
+        <button class="btn-pill btn-secondary" id="edit-cancel-btn">Annulla</button>
+        <button class="btn-pill btn-primary" id="edit-save-btn">Salva</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/app.js"></script>
   <script src="js/home.js"></script>
   <script src="js/stats.js"></script>
   <script src="js/budget.js"></script>
   <script src="js/log.js"></script>
   <script src="js/entry.js"></script>
+  <script src="js/edit.js"></script>
 </body>
 </html>

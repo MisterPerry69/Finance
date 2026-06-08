@@ -328,7 +328,7 @@ a { color: inherit; text-decoration: none; }
 
 .trans-edit-btn {
   position: absolute;
-  right: 0;
+  right: 55px;
   top: 50%;
   transform: translateY(-50%);
   width: 28px;

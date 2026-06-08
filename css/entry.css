@@ -211,9 +211,18 @@
   background: transparent;
   box-shadow: none;
 }
-.multi-row-amount { flex: 0 0 72px; }
-.multi-row-desc   { flex: 1; }
-.multi-row-wallet { flex: 0 0 72px; }
+.multi-row .multi-row-wallet {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--teal);
+  font-weight: 800;
+  box-shadow: none;
+}
+.multi-row-amount { flex: 0 0 68px; }
+.multi-row-desc   { flex: 1; min-width: 0; }
+.multi-row-wallet { flex: 0 0 80px; font-size: var(--fs-small); font-weight: 700; }
 .multi-row-sign {
   flex-shrink: 0;
   width: 30px;

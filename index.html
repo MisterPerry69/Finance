@@ -391,17 +391,22 @@
         <button class="entry-type-tab" data-tab="transfer">Sposta</button>
       </div>
 
-      <!-- Wallet selector -->
-      <div class="section-heading">Conto</div>
-      <div class="wallet-selector" id="wallet-selector">
-        <button class="wallet-btn active" data-wallet="BANK">Bank</button>
-        <button class="wallet-btn" data-wallet="TINABA">Tinaba</button>
-        <button class="wallet-btn" data-wallet="PAYPAL">PayPal</button>
-        <button class="wallet-btn" data-wallet="CASH">Cash</button>
-      </div>
-
       <!-- Single form -->
       <div id="form-single" class="entry-form">
+        <!-- Spesa / Entrata prima di tutto -->
+        <div class="sign-row">
+          <button id="fin-sign-btn" class="sign-btn negative selected" data-sign="-1">− Spesa</button>
+          <button id="fin-sign-btn-plus" class="sign-btn positive" data-sign="1">+ Entrata</button>
+        </div>
+        <!-- Conto -->
+        <div class="section-heading">Conto</div>
+        <div class="wallet-selector" id="wallet-selector">
+          <button class="wallet-btn active" data-wallet="BANK">Bank</button>
+          <button class="wallet-btn" data-wallet="TINABA">Tinaba</button>
+          <button class="wallet-btn" data-wallet="PAYPAL">PayPal</button>
+          <button class="wallet-btn" data-wallet="CASH">Cash</button>
+        </div>
+        <!-- Importo + causale -->
         <div class="form-row">
           <div class="form-field field-amount">
             <label class="field-label">Importo (€)</label>
@@ -416,21 +421,17 @@
           <label class="field-label">Note (opzionale)</label>
           <input type="text" id="fin-note" class="field-input" placeholder="" autocomplete="off" />
         </div>
-        <div class="sign-row">
-          <button id="fin-sign-btn" class="sign-btn negative selected" data-sign="-1">− Spesa</button>
-          <button id="fin-sign-btn-plus" class="sign-btn positive" data-sign="1">+ Entrata</button>
-        </div>
         <button id="submit-single" class="submit-btn">Salva</button>
       </div>
 
-      <!-- Multi form -->
+      <!-- Multi form (conto nella riga, no wallet selector globale) -->
       <div id="form-multi" class="entry-form hidden">
         <div id="fin-multi-rows" class="multi-rows"></div>
         <button id="add-row-btn" class="add-row-btn">+ Aggiungi riga</button>
         <button id="submit-multi" class="submit-btn">Salva tutto</button>
       </div>
 
-      <!-- Transfer form -->
+      <!-- Transfer form (Da/A integrati, no wallet selector globale) -->
       <div id="form-transfer" class="entry-form hidden">
         <div class="form-field">
           <label class="field-label">Importo (€)</label>

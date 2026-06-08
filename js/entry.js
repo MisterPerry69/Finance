@@ -171,9 +171,12 @@ function addMultiRow() {
   row.innerHTML = `
     <button class="multi-row-sign negative" data-sign="-1">−</button>
     <input type="number" class="field-input multi-row-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
-    <input type="text" class="field-input multi-row-desc" placeholder="causale" autocomplete="off" />
+    <input type="text" class="field-input multi-row-desc" placeholder="causale, note..." autocomplete="off" />
     <select class="field-select multi-row-wallet">
-      <option>BANK</option><option>TINABA</option><option>PAYPAL</option><option>CASH</option>
+      <option value="BANK">Bank</option>
+      <option value="TINABA">Tinaba</option>
+      <option value="PAYPAL">PayPal</option>
+      <option value="CASH">Cash</option>
     </select>
     <button class="multi-row-del" aria-label="Rimuovi">✕</button>
   `;

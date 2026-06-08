@@ -194,6 +194,7 @@ function escapeAttr(str) {
 const CAT_ICONS = {
   CIBO:          "utensils",
   SPESA:         "shopping-cart",
+  SHOPPING:      "shopping-bag",
   SVAGO:         "gamepad-2",
   CASA:          "home",
   SALUTE:        "heart",
@@ -212,6 +213,7 @@ const CAT_COLORS = {
   CASA:       "#25B7BB",
   TECH:       "#0891b2",
   SVAGO:      "#a78bfa",
+  SHOPPING:   "#e879f9",
   TRASPORTI:  "#fb923c",
   SALUTE:     "#f472b6",
   ENTRATE:    "#1aab7a",

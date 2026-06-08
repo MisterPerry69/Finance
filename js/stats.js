@@ -39,7 +39,6 @@ async function _loadStatsForMonth(ym) {
   try {
     const data = await apiGet("finance_filter_month", { ym });
     if (!data) return;
-    // Build a fake month stats from the filtered transactions
     let spent = 0, income = 0;
     const cats = {};
     (data || []).forEach(t => {
@@ -53,8 +52,9 @@ async function _loadStatsForMonth(ym) {
       }
     });
     _renderStatsMonth({ spent, income, categories: cats });
+    _renderStatsAnnual(); // update highlighted row
   } catch(e) {
-    // silently ignore — user can try again
+    // silently ignore
   }
 }
 
@@ -75,6 +75,7 @@ function renderStats(data) {
   _renderStatsMonth(month, total);
   _renderTrendBars(month);
   _renderGas(month);
+  _renderStatsAnnual();
 }
 
 function _renderStatsMonth(month, totalOverride) {
@@ -144,6 +145,42 @@ function _renderTrendBars(currentMonth) {
         <div class="trend-bar-label">${escapeHtml((m.label || "").slice(0, 3))}</div>
       </div>`;
   }).join("");
+}
+
+function _renderStatsAnnual() {
+  const months  = window._budgetMonths;
+  const card    = document.getElementById("stats-annual-card");
+  const list    = document.getElementById("stats-annual-list");
+  if (!card || !list) return;
+
+  if (!months || months.length === 0) {
+    card.classList.add("hidden");
+    return;
+  }
+  card.classList.remove("hidden");
+
+  const maxSpent = Math.max(...months.map(m => m.spent || 0), 1);
+  list.innerHTML = months.map(m => {
+    const ym    = m.ym || "";
+    const isCur = ym === _statsCurrentYM;
+    const pct   = ((m.spent || 0) / maxSpent * 100).toFixed(0);
+    return `
+      <div class="log-annual-row stats-annual-row" data-ym="${escapeAttr(ym)}">
+        <span class="log-annual-month${isCur ? " current" : ""}">${escapeHtml(m.labelFull || m.label || ym)}</span>
+        <div class="log-annual-bar-wrap">
+          <div class="log-annual-bar${isCur ? " current" : ""}" style="width:${pct}%"></div>
+        </div>
+        <span class="log-annual-amt">${parseFloat(m.spent || 0).toFixed(2)}€</span>
+      </div>`;
+  }).join("");
+
+  list.querySelectorAll(".stats-annual-row[data-ym]").forEach(row => {
+    row.addEventListener("click", () => {
+      _statsCurrentYM = row.dataset.ym;
+      _updateStatsMonthLabel();
+      _loadStatsForMonth(_statsCurrentYM);
+    });
+  });
 }
 
 function _renderGas(month) {

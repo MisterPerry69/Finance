@@ -173,19 +173,22 @@
 }
 .search-clear-btn.hidden { display: none; }
 
-/* ---- Category dropdown filter ---- */
+/* ---- Filter row: categoria + conto ---- */
 .log-filter-row {
+  display: flex;
+  gap: var(--sp-2);
   padding: 0 var(--sp-4) var(--sp-3);
   flex-shrink: 0;
 }
 
 .log-cat-select {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   background: var(--bg-card);
   border: 1.5px solid var(--border-soft);
   border-radius: var(--r);
   color: var(--text);
-  padding: 10px var(--sp-4);
+  padding: 10px var(--sp-3);
   font-size: var(--fs-small);
   font-weight: 700;
   font-family: var(--font);

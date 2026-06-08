@@ -80,6 +80,31 @@
   transition: width 1s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+/* ---- Card header con AI button ---- */
+.budget-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+.budget-ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  border-radius: var(--r-pill);
+  color: var(--teal);
+  padding: 4px 12px;
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-family: var(--font);
+  transition: all var(--t-fast);
+}
+.budget-ai-btn:disabled { opacity: 0.5; cursor: default; }
+.budget-ai-btn svg { width: 12px; height: 12px; }
+
 /* ---- Category spend list ---- */
 .budget-cat-list { display: flex; flex-direction: column; }
 
@@ -112,44 +137,39 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.budget-cat-bar-mini {
-  height: 3px;
-  background: var(--teal-light);
+.budget-cat-bar-track {
+  width: 100%;
+  height: 4px;
+  background: var(--navy-dim);
   border-radius: var(--r-pill);
-  margin-top: 4px;
-  max-width: 100%;
-  transition: width 0.8s ease;
+  overflow: hidden;
+  margin-top: 5px;
 }
+.budget-cat-bar-fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.budget-cat-remain {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim-2);
+  margin-top: 3px;
+  letter-spacing: 0.02em;
+}
+.budget-cat-remain.over { color: #ef4444; }
 
 .budget-cat-amount {
   font-weight: 800;
   font-size: var(--fs-small);
   color: var(--text);
   flex-shrink: 0;
+  text-align: right;
 }
-
-/* ---- Yearly section ---- */
-.year-months { display: flex; flex-direction: column; gap: 0; }
-
-.year-month-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border-ghost);
-}
-.year-month-row:last-child { border-bottom: none; }
-.year-month-row.current .year-month-label { color: var(--teal); font-weight: 800; }
-
-.year-month-label {
-  font-size: var(--fs-small);
-  font-weight: 700;
-  color: var(--text-dim);
-}
-.year-month-val {
-  font-size: var(--fs-small);
-  font-weight: 800;
-  color: var(--text);
+.budget-cat-target {
+  font-size: var(--fs-micro);
+  color: var(--text-dim-2);
+  font-weight: 600;
 }
 
 /* ---- Section toggle pills ---- */

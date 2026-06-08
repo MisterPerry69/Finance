@@ -268,6 +268,7 @@ a { color: inherit; text-decoration: none; }
   gap: var(--sp-3);
   padding: 11px 0;
   border-bottom: 1px solid var(--border-ghost);
+  position: relative;
 }
 .trans-row:last-child { border-bottom: none; }
 
@@ -326,11 +327,14 @@ a { color: inherit; text-decoration: none; }
 .pending-row .trans-icon-wrap { background: var(--navy-dim); color: var(--text-dim-2); }
 
 .trans-edit-btn {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
   border-radius: var(--r-sm);
-  background: transparent;
+  background: var(--bg);
   border: none;
   color: var(--text-dim-2);
   display: grid;
@@ -338,6 +342,7 @@ a { color: inherit; text-decoration: none; }
   opacity: 0;
   transition: opacity var(--t-fast), color var(--t-fast), background var(--t-fast);
   cursor: pointer;
+  z-index: 1;
 }
 .trans-edit-btn svg { width: 13px; height: 13px; stroke-width: 2; }
 .trans-row:hover .trans-edit-btn,

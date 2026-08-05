@@ -209,6 +209,7 @@ const CAT_ICONS = {
 };
 
 const CAT_COLORS = {
+  SPESA:      "#d4a017",
   CIBO:       "#f0b429",
   CASA:       "#25B7BB",
   TECH:       "#0891b2",

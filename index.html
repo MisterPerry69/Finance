@@ -189,16 +189,16 @@
             <div id="bank-val" class="wallet-chip-val">—</div>
           </div>
           <div class="wallet-chip">
-            <div class="wallet-chip-name">Tinaba</div>
-            <div id="tinaba-val" class="wallet-chip-val">—</div>
-          </div>
-          <div class="wallet-chip">
             <div class="wallet-chip-name">PayPal</div>
             <div id="paypal-val" class="wallet-chip-val">—</div>
           </div>
           <div class="wallet-chip">
             <div class="wallet-chip-name">Cash</div>
             <div id="cash-val" class="wallet-chip-val">—</div>
+          </div>
+          <div class="wallet-chip deposit">
+            <div class="wallet-chip-name">Deposito</div>
+            <div id="ifis-val" class="wallet-chip-val">—</div>
           </div>
         </div>
 
@@ -376,6 +376,7 @@
     <div class="log-filter-row">
       <select id="log-cat-filter" class="log-cat-select">
         <option value="">Tutte le categorie</option>
+        <option value="SPESA">Spesa</option>
         <option value="CIBO">Cibo</option>
         <option value="CASA">Casa</option>
         <option value="TECH">Tech</option>
@@ -390,9 +391,9 @@
       <select id="log-wallet-filter" class="log-cat-select">
         <option value="">Tutti i conti</option>
         <option value="BANK">Bank</option>
-        <option value="TINABA">Tinaba</option>
         <option value="PAYPAL">PayPal</option>
         <option value="CASH">Cash</option>
+        <option value="IFIS">Deposito</option>
       </select>
     </div>
 
@@ -431,9 +432,9 @@
         <div class="section-heading">Conto</div>
         <div class="wallet-selector" id="wallet-selector">
           <button class="wallet-btn active" data-wallet="BANK">Bank</button>
-          <button class="wallet-btn" data-wallet="TINABA">Tinaba</button>
           <button class="wallet-btn" data-wallet="PAYPAL">PayPal</button>
           <button class="wallet-btn" data-wallet="CASH">Cash</button>
+          <button class="wallet-btn" data-wallet="IFIS">Deposito</button>
         </div>
         <!-- Importo + causale -->
         <div class="form-row">
@@ -470,14 +471,14 @@
           <div class="form-field">
             <label class="field-label">Da</label>
             <select id="fin-transfer-from" class="field-select">
-              <option>BANK</option><option>TINABA</option><option>PAYPAL</option><option>CASH</option>
+              <option>BANK</option><option>PAYPAL</option><option>CASH</option><option>IFIS</option>
             </select>
           </div>
           <div class="transfer-arrow">→</div>
           <div class="form-field">
             <label class="field-label">A</label>
             <select id="fin-transfer-to" class="field-select">
-              <option>CASH</option><option>BANK</option><option>TINABA</option><option>PAYPAL</option>
+              <option>CASH</option><option>BANK</option><option>PAYPAL</option><option>IFIS</option>
             </select>
           </div>
         </div>
@@ -507,14 +508,15 @@
           <label class="edit-label">Conto</label>
           <select id="edit-wallet" class="edit-input">
             <option value="BANK">Bank</option>
-            <option value="TINABA">Tinaba</option>
             <option value="PAYPAL">PayPal</option>
             <option value="CASH">Cash</option>
+            <option value="IFIS">Deposito</option>
           </select>
         </div>
         <div class="edit-field-group">
           <label class="edit-label">Categoria</label>
           <select id="edit-cat" class="edit-input">
+            <option value="SPESA">Spesa</option>
             <option value="CIBO">Cibo</option>
             <option value="CASA">Casa</option>
             <option value="TECH">Tech</option>

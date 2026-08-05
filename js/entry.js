@@ -174,9 +174,9 @@ function addMultiRow() {
     <input type="text" class="field-input multi-row-desc" placeholder="causale, note..." autocomplete="off" />
     <select class="field-select multi-row-wallet">
       <option value="BANK">Bank</option>
-      <option value="TINABA">Tinaba</option>
       <option value="PAYPAL">PayPal</option>
       <option value="CASH">Cash</option>
+      <option value="IFIS">Deposito</option>
     </select>
     <button class="multi-row-del" aria-label="Rimuovi">✕</button>
   `;

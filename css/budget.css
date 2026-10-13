@@ -11,7 +11,7 @@
   background: var(--navy);
   border-radius: var(--r-xl);
   padding: var(--sp-6) var(--sp-5);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-4);
   color: var(--text-on-navy);
   position: relative;
   overflow: hidden;
@@ -62,8 +62,9 @@
 
 .budget-hero-sub {
   font-size: var(--fs-small);
-  color: rgba(255,255,255,0.5);
-  margin-bottom: var(--sp-4);
+  color: rgba(255,255,255,0.6);
+  line-height: 1.5;
+  margin-bottom: var(--sp-5);
   font-weight: 600;
 }
 
@@ -112,7 +113,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border-ghost);
 }
 .budget-cat-row:last-child { border-bottom: none; }
@@ -154,7 +155,7 @@
   font-size: 0.65rem;
   font-weight: 700;
   color: var(--text-dim-2);
-  margin-top: 3px;
+  margin-top: 5px;
   letter-spacing: 0.02em;
 }
 .budget-cat-remain.over { color: #ef4444; }
@@ -196,4 +197,120 @@
   background: var(--navy);
   border-color: var(--navy);
   color: #fff;
+}
+
+/* ---- Hero: tacca del ritmo + riga finale ---- */
+.budget-hero-bar-wrap { position: relative; overflow: visible; }
+.budget-hero-bar-wrap .budget-hero-bar { position: relative; }
+.budget-hero-pace {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 13px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: rgba(255,255,255,0.75);
+}
+.budget-hero-foot {
+  margin-top: var(--sp-4);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--teal-light);
+}
+
+/* ---- Tacca ritmo nelle righe categoria ---- */
+.budget-cat-bar-track { position: relative; overflow: visible; }
+.budget-cat-bar-fill { position: relative; }
+.budget-cat-pace {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--navy);
+  opacity: 0.45;
+}
+
+.budget-note {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  line-height: 1.6;
+}
+.budget-note:not(:empty) { margin-top: var(--sp-3); }
+.budget-note p + p { margin-top: var(--sp-1); }
+
+/* ---- Impostazioni / calcolo ---- */
+.budget-calc {
+  background: var(--bg-subtle);
+  border-radius: var(--r);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.budget-calc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 6px 0;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.budget-calc-row.minus span:last-child { color: var(--color-positive); }
+.budget-calc-row.total {
+  margin-top: 4px;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 900;
+  font-size: var(--fs-body);
+}
+.budget-calc-row.total span:last-child { color: var(--teal); }
+
+.budget-setting + .budget-setting { margin-top: var(--sp-5); }
+.budget-setting-label {
+  display: block;
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim-2);
+  margin-bottom: var(--sp-2);
+}
+
+/* Controllo segmentato, stesso stile delle tab del modale */
+.savings-chips {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: var(--navy-dim);
+  border-radius: var(--r-pill);
+  padding: 3px;
+}
+.savings-chip {
+  padding: 8px 0;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--text-dim-2);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.savings-chip.active {
+  background: var(--bg-card);
+  color: var(--teal);
+  box-shadow: var(--shadow-sm);
+}
+
+.budget-income-row {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.budget-income-row .field-input { flex: 1; }
+.budget-setting-hint {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  line-height: 1.5;
 }

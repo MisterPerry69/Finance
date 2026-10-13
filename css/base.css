@@ -247,7 +247,8 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   overflow: hidden;
 }
-.card + .card { margin-top: var(--sp-3); }
+/* Spazio uniforme sotto ogni card, anche quando non sono fratelle dirette */
+.pane .card { margin-bottom: var(--sp-4); }
 
 /* ---- Section heading ---- */
 .section-heading {
@@ -256,7 +257,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-dim-2);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-4);
 }
 
 /* ---- Transaction rows ---- */
@@ -328,7 +329,7 @@ a { color: inherit; text-decoration: none; }
 
 .trans-edit-btn {
   position: absolute;
-  right: 55px;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   width: 28px;
@@ -561,3 +562,62 @@ a { color: inherit; text-decoration: none; }
 }
 .refresh-btn:active { background: var(--teal-dim); }
 .refresh-btn:disabled { opacity: 0.4; cursor: default; }
+
+.trans-row[data-row-index] { cursor: pointer; }
+.trans-row[data-row-index]:active { background: var(--teal-pale); }
+
+.ai-block-text p + p { margin-top: var(--sp-2); }
+.ai-block-text b { color: var(--text); font-weight: 800; }
+
+.log-month-arrow:disabled { opacity: 0.3; cursor: default; }
+
+/* ---- Header card con azione a destra ---- */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  color: var(--teal);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background var(--t-fast);
+}
+.chip-btn:active { background: var(--teal-border); }
+.chip-btn svg { width: 14px; height: 14px; stroke-width: 2.2; }
+
+/* ---- Card "In sintesi" ---- */
+.insight-card {
+  background: linear-gradient(135deg, rgba(37,183,187,0.07), rgba(20,60,81,0.03)), var(--bg-card);
+  border-color: var(--teal-border);
+}
+.insight-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: var(--sp-3);
+}
+.insight-label svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.insight-text {
+  font-size: var(--fs-small);
+  color: var(--text-dim);
+  line-height: 1.6;
+  font-weight: 500;
+}
+.insight-text p + p { margin-top: var(--sp-3); }
+.insight-text b { color: var(--text); font-weight: 800; }

@@ -269,3 +269,18 @@
   padding-bottom: var(--sp-3);
   flex-shrink: 0;
 }
+
+/* ---- Data ---- */
+.field-date { flex: 0 0 150px; }
+.entry-date { padding-left: var(--sp-3); padding-right: var(--sp-2); min-height: 46px; }
+
+/* ---- Carburante: €/L calcolato ---- */
+.fuel-price {
+  align-self: center;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: rgba(217,119,6,0.10);
+  color: var(--color-gas);
+  font-size: var(--fs-small);
+  font-weight: 900;
+}

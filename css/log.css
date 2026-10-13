@@ -284,3 +284,22 @@
   width: 0;
   height: 0;
 }
+
+/* ---- Ricerca attiva: il periodo non conta ---- */
+.log-month-nav.is-searching .log-month-arrow { visibility: hidden; }
+.log-month-nav.is-searching .log-month-label { min-width: 0; font-size: var(--fs-small); color: var(--text-dim); }
+
+/* ---- Totali del periodo ---- */
+.log-summary {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  padding: 0 var(--sp-4) var(--sp-2);
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  color: var(--text-dim-2);
+  flex-shrink: 0;
+}
+.log-summary:empty { display: none; }
+.log-summary .neg { color: var(--color-negative); }
+.log-summary .pos { color: var(--color-positive); }

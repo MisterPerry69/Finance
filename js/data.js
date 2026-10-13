@@ -82,7 +82,7 @@ function txKind(t) {
 const GAS_LITERS_RE = /(\d+(?:[.,]\d+)?)\s*(?:l|lt|litri)\b/i;
 
 function _statsOf(list) {
-  const s = { spent: 0, income: 0, cats: {}, count: list.length, gasSpent: 0, gasLiters: 0 };
+  const s = { spent: 0, income: 0, cats: {}, count: list.length, gasSpent: 0, gasLiters: 0, gasFills: [] };
   for (const t of list) {
     const kind = txKind(t);
     if (kind === "income") s.income += t.amt;
@@ -92,7 +92,12 @@ function _statsOf(list) {
       s.cats[t.cat || "ALTRO"] = (s.cats[t.cat || "ALTRO"] || 0) + v;
       if (t.cat === "TRASPORTI") {
         const m = (t.note + " " + t.desc).match(GAS_LITERS_RE);
-        if (m) { s.gasSpent += v; s.gasLiters += parseFloat(m[1].replace(",", ".")); }
+        if (m) {
+          const liters = parseFloat(m[1].replace(",", "."));
+          s.gasSpent += v;
+          s.gasLiters += liters;
+          s.gasFills.push({ date: t.date, liters, amt: v });
+        }
       }
     }
   }

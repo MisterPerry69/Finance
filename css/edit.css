@@ -75,3 +75,10 @@
   color: var(--bg);
 }
 .btn-pill:disabled { opacity: 0.5; cursor: default; }
+
+.edit-error {
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--color-negative);
+}
+.edit-error:empty { display: none; }

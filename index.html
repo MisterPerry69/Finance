@@ -11,14 +11,14 @@
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tokens.css" />
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/home.css" />
-  <link rel="stylesheet" href="css/stats.css" />
-  <link rel="stylesheet" href="css/budget.css" />
-  <link rel="stylesheet" href="css/log.css" />
-  <link rel="stylesheet" href="css/entry.css" />
-  <link rel="stylesheet" href="css/edit.css" />
+  <link rel="stylesheet" href="css/tokens.css?v=3" />
+  <link rel="stylesheet" href="css/base.css?v=3" />
+  <link rel="stylesheet" href="css/home.css?v=3" />
+  <link rel="stylesheet" href="css/stats.css?v=3" />
+  <link rel="stylesheet" href="css/budget.css?v=3" />
+  <link rel="stylesheet" href="css/log.css?v=3" />
+  <link rel="stylesheet" href="css/entry.css?v=3" />
+  <link rel="stylesheet" href="css/edit.css?v=3" />
 </head>
 <body>
 
@@ -115,11 +115,9 @@
             <div id="budget-cats-note" class="budget-note"></div>
           </div>
 
-          <div class="card">
-            <div class="ai-block">
-              <div class="ai-block-label">In sintesi</div>
-              <div id="budget-summary" class="ai-block-text"></div>
-            </div>
+          <div class="card insight-card">
+            <div class="insight-label"><i data-lucide="lightbulb"></i> In sintesi</div>
+            <div id="budget-summary" class="insight-text"></div>
           </div>
         </div>
 
@@ -142,11 +140,9 @@
             <div class="budget-note"><p>La tacca indica dove dovresti essere oggi spendendo in modo uniforme.</p></div>
           </div>
 
-          <div class="card">
-            <div class="ai-block">
-              <div class="ai-block-label">Proiezione anno</div>
-              <div id="budget-year-summary" class="ai-block-text"></div>
-            </div>
+          <div class="card insight-card">
+            <div class="insight-label"><i data-lucide="lightbulb"></i> Proiezione anno</div>
+            <div id="budget-year-summary" class="insight-text"></div>
           </div>
         </div>
 
@@ -156,15 +152,15 @@
           <div id="budget-calc" class="budget-calc"></div>
 
           <div class="budget-setting">
-            <div class="field-label">Obiettivo di risparmio</div>
+            <div class="budget-setting-label">Obiettivo di risparmio</div>
             <div class="savings-chips" id="savings-chips"></div>
           </div>
 
           <div class="budget-setting">
-            <label class="field-label" for="budget-income-input">Entrate mensili</label>
+            <label class="budget-setting-label" for="budget-income-input">Entrate mensili</label>
             <div class="budget-income-row">
               <input type="number" id="budget-income-input" class="field-input" inputmode="decimal" step="10" min="0" />
-              <button id="budget-income-auto" class="budget-ai-btn hidden">Auto</button>
+              <button id="budget-income-auto" class="chip-btn hidden">Auto</button>
             </div>
             <div class="budget-setting-hint" id="budget-income-hint"></div>
           </div>
@@ -270,22 +266,26 @@
           </button>
         </div>
 
-        <!-- KPI -->
-        <div class="stats-kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Speso</div>
-            <div id="stat-total-spent" class="kpi-value neg">—</div>
-            <div class="kpi-sub" id="stat-spent-sub"></div>
+        <!-- Riepilogo periodo -->
+        <div class="card period-card">
+          <div class="period-head">
+            <div>
+              <div class="period-label">Risparmiato</div>
+              <div id="stat-net" class="period-net">—</div>
+            </div>
+            <span id="stat-net-chip" class="period-chip"></span>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Entrate</div>
-            <div id="stat-total-income" class="kpi-value pos">—</div>
-            <div class="kpi-sub" id="stat-income-sub"></div>
-          </div>
-          <div class="kpi-card kpi-wide">
-            <div class="kpi-label">Risparmiato</div>
-            <div id="stat-net" class="kpi-value">—</div>
-            <div class="kpi-sub" id="stat-net-sub"></div>
+          <div class="period-split">
+            <div class="period-stat">
+              <div class="period-stat-label"><span class="dot pos"></span>Entrate</div>
+              <div id="stat-total-income" class="period-stat-val">—</div>
+              <div class="period-stat-sub" id="stat-income-sub"></div>
+            </div>
+            <div class="period-stat">
+              <div class="period-stat-label"><span class="dot neg"></span>Uscite</div>
+              <div id="stat-total-spent" class="period-stat-val">—</div>
+              <div class="period-stat-sub" id="stat-spent-sub"></div>
+            </div>
           </div>
         </div>
 
@@ -311,12 +311,10 @@
         </div>
 
         <!-- Sintesi -->
-        <div class="card">
-          <div class="ai-block">
-            <div class="ai-block-label">In sintesi</div>
-            <div id="stats-eval" class="ai-block-text"></div>
+        <div class="card insight-card">
+            <div class="insight-label"><i data-lucide="lightbulb"></i> In sintesi</div>
+            <div id="stats-eval" class="insight-text"></div>
           </div>
-        </div>
 
         <!-- Autonomia -->
         <div class="card">
@@ -331,22 +329,26 @@
         </div>
 
         <!-- Carburante -->
-        <div class="card hidden" id="gas-card">
-          <div class="section-heading">Carburante</div>
-          <div class="gas-row">
-            <div class="gas-stat">
-              <span class="gas-stat-label">Speso</span>
-              <span id="gas-spent" class="gas-stat-val gas-spent">—</span>
+        <div class="card" id="gas-card">
+          <div class="card-head">
+            <div class="section-heading no-mb">Carburante</div>
+            <button class="chip-btn" id="gas-add-btn"><i data-lucide="fuel"></i> Rifornimento</button>
+          </div>
+          <div class="gas-tiles">
+            <div class="gas-tile">
+              <span id="gas-avg-price" class="gas-tile-val">—</span>
+              <span class="gas-tile-label">€/litro</span>
             </div>
-            <div class="gas-stat">
-              <span class="gas-stat-label">Litri</span>
-              <span id="gas-liters" class="gas-stat-val gas-liters">—</span>
+            <div class="gas-tile">
+              <span id="gas-liters" class="gas-tile-val">—</span>
+              <span class="gas-tile-label">litri</span>
             </div>
-            <div class="gas-stat">
-              <span class="gas-stat-label">€/L medio</span>
-              <span id="gas-avg-price" class="gas-stat-val">—</span>
+            <div class="gas-tile">
+              <span id="gas-spent" class="gas-tile-val">—</span>
+              <span class="gas-tile-label">speso</span>
             </div>
           </div>
+          <div id="gas-list" class="gas-list"></div>
         </div>
       </div>
 
@@ -451,6 +453,7 @@
         <button class="entry-type-tab active" data-tab="single">Singola</button>
         <button class="entry-type-tab" data-tab="multi">Multipla</button>
         <button class="entry-type-tab" data-tab="transfer">Sposta</button>
+        <button class="entry-type-tab" data-tab="fuel">Carburante</button>
       </div>
 
       <!-- Single form -->
@@ -479,15 +482,25 @@
             <input type="text" id="fin-desc" class="field-input" placeholder="es. spesa, stipendio, saldo..." autocomplete="off" />
           </div>
         </div>
-        <div class="form-field">
-          <label class="field-label">Note (opzionale)</label>
-          <input type="text" id="fin-note" class="field-input" placeholder="" autocomplete="off" />
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label">Note (opzionale)</label>
+            <input type="text" id="fin-note" class="field-input" placeholder="" autocomplete="off" />
+          </div>
+          <div class="form-field field-date">
+            <label class="field-label">Data</label>
+            <input type="date" id="fin-date" class="field-input entry-date" />
+          </div>
         </div>
         <button id="submit-single" class="submit-btn">Salva</button>
       </div>
 
       <!-- Multi form (conto nella riga, no wallet selector globale) -->
       <div id="form-multi" class="entry-form hidden">
+        <div class="form-field">
+          <label class="field-label">Data (vale per tutte le righe)</label>
+          <input type="date" id="fin-multi-date" class="field-input entry-date" />
+        </div>
         <div id="fin-multi-rows" class="multi-rows"></div>
         <button id="add-row-btn" class="add-row-btn">+ Aggiungi riga</button>
         <button id="submit-multi" class="submit-btn">Salva tutto</button>
@@ -515,6 +528,37 @@
           </div>
         </div>
         <button id="submit-transfer" class="submit-btn">Esegui trasferimento</button>
+      </div>
+
+      <!-- Fuel form -->
+      <div id="form-fuel" class="entry-form hidden">
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label">Importo (€)</label>
+            <input type="number" id="fuel-amount" class="field-input" placeholder="60.00" step="0.01" inputmode="decimal" />
+          </div>
+          <div class="form-field">
+            <label class="field-label">Litri</label>
+            <input type="number" id="fuel-liters" class="field-input" placeholder="35.5" step="0.01" inputmode="decimal" />
+          </div>
+        </div>
+        <div class="fuel-price" id="fuel-price">— €/L</div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label">Conto</label>
+            <select id="fuel-wallet" class="field-select">
+              <option value="BANK">Bank</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="CASH">Cash</option>
+              <option value="IFIS">Deposito</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-label">Data</label>
+            <input type="date" id="fuel-date" class="field-input entry-date" />
+          </div>
+        </div>
+        <button id="submit-fuel" class="submit-btn">Salva rifornimento</button>
       </div>
 
     </div>
@@ -579,14 +623,14 @@
     </div>
   </div>
 
-  <script src="js/api.js"></script>
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/home.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/budget.js"></script>
-  <script src="js/log.js"></script>
-  <script src="js/entry.js"></script>
-  <script src="js/edit.js"></script>
+  <script src="js/api.js?v=3"></script>
+  <script src="js/data.js?v=3"></script>
+  <script src="js/app.js?v=3"></script>
+  <script src="js/home.js?v=3"></script>
+  <script src="js/stats.js?v=3"></script>
+  <script src="js/budget.js?v=3"></script>
+  <script src="js/log.js?v=3"></script>
+  <script src="js/entry.js?v=3"></script>
+  <script src="js/edit.js?v=3"></script>
 </body>
 </html>

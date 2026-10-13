@@ -27,40 +27,6 @@
 /* Accent override for stats */
 #pane-stats { --accent: var(--accent-stats); }
 
-.stats-kpi-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-3);
-}
-
-.kpi-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--r-lg);
-  padding: var(--sp-4);
-  box-shadow: var(--shadow-sm);
-}
-
-.kpi-label {
-  font-size: var(--fs-micro);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim-2);
-  margin-bottom: var(--sp-2);
-}
-
-.kpi-value {
-  font-size: 1.5rem;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: var(--text);
-  line-height: 1;
-}
-.kpi-value.neg { color: var(--color-negative); }
-.kpi-value.pos { color: var(--color-positive); }
-
 .kpi-sub {
   font-size: var(--fs-micro);
   color: var(--text-dim-2);
@@ -153,28 +119,239 @@
   letter-spacing: 0.04em;
 }
 
-/* ---- Gas card ---- */
-.gas-row {
-  display: flex;
-  gap: var(--sp-3);
+/* ---- Categorie: % e media mensile ---- */
+.cat-breakdown-sub {
+  display: block;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 1px;
 }
-.gas-stat {
-  flex: 1;
+
+/* ---- Andamento: barre mensili ---- */
+.trend-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.trend-caption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--text-dim-2);
+}
+.trend-avg-key {
+  width: 14px;
+  border-top: 1.5px dashed var(--text-dim-2);
+}
+
+.trend-chart { padding-top: 18px; }
+
+.trend-plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
   gap: 2px;
+  height: 110px;
+  border-bottom: 1px solid var(--border-soft);
 }
-.gas-stat-label {
+.trend-avg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed var(--text-dim-2);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.trend-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.trend-col:disabled { cursor: default; }
+
+.trend-bar {
+  width: 100%;
+  max-width: 22px;
+  border-radius: 4px 4px 0 0;
+  background: var(--teal-light);
+  transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1), background var(--t-fast);
+}
+.trend-col:not(.empty) .trend-bar { min-height: 2px; }
+.trend-col.sel .trend-bar { background: var(--teal); }
+.trend-col:not(:disabled):active .trend-bar { background: var(--teal); }
+
+.trend-val {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: var(--fs-micro);
   font-weight: 800;
-  letter-spacing: 0.1em;
+  color: var(--text);
+  z-index: 2;
+}
+.trend-val.left  { left: 0;   transform: none; }
+.trend-val.right { left: auto; right: 0; transform: none; }
+
+.trend-labels {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+}
+.trend-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--text-dim-2);
+  letter-spacing: 0.02em;
+}
+.trend-labels span.sel { color: var(--teal); }
+
+/* ---- Mese per mese ---- */
+.stats-annual-row {
+  width: 100%;
+  text-align: left;
+  font-family: var(--font);
+}
+.log-annual-amt { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.log-annual-net { font-size: var(--fs-micro); font-weight: 700; }
+.log-annual-net.pos { color: var(--color-positive); }
+.log-annual-net.neg { color: var(--color-negative); }
+
+#survival-sub { margin-top: var(--sp-2); }
+
+/* ---- Riepilogo periodo ---- */
+.period-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border-ghost);
+}
+.period-label,
+.period-stat-label {
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim-2);
 }
-.gas-stat-val {
+.period-net {
+  margin-top: 6px;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.period-net.pos { color: var(--color-positive); }
+.period-net.neg { color: var(--color-negative); }
+
+.period-chip {
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  background: var(--navy-dim);
+  color: var(--text-dim);
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.period-chip.pos { background: rgba(26,171,122,0.12); color: var(--color-positive); }
+.period-chip.neg { background: rgba(217,79,79,0.10); color: var(--color-negative); }
+
+.period-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding-top: var(--sp-4);
+}
+.period-stat + .period-stat {
+  border-left: 1px solid var(--border-ghost);
+  padding-left: var(--sp-4);
+}
+.period-stat-label { display: flex; align-items: center; gap: 6px; }
+.period-stat-label .dot { width: 7px; height: 7px; border-radius: var(--r-pill); }
+.period-stat-label .dot.pos { background: var(--color-positive); }
+.period-stat-label .dot.neg { background: var(--color-negative); }
+.period-stat-val {
+  margin-top: 6px;
   font-size: var(--fs-title);
   font-weight: 900;
-  letter-spacing: -0.02em;
+  color: var(--text);
+  letter-spacing: -0.01em;
 }
-.gas-spent  { color: var(--color-gas); }
-.gas-liters { color: var(--color-gas-l); }
+.period-stat-sub {
+  margin-top: 3px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+}
+
+/* ---- Carburante ---- */
+.gas-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+.gas-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-3);
+  border-radius: var(--r);
+  background: var(--bg-subtle);
+}
+.gas-tile:first-child { background: rgba(217,119,6,0.10); }
+.gas-tile:first-child .gas-tile-val { color: var(--color-gas); }
+.gas-tile-val {
+  font-size: var(--fs-title);
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.gas-tile-label {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--text-dim-2);
+}
+
+.gas-list { margin-top: var(--sp-3); }
+.gas-fill {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr 1fr;
+  gap: var(--sp-2);
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-ghost);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.gas-fill:last-child { border-bottom: none; }
+.gas-fill-date { color: var(--text-dim-2); }
+.gas-fill-ppl  { color: var(--color-gas); text-align: right; }
+.gas-fill-amt  { color: var(--text); text-align: right; font-weight: 800; }
+.gas-empty {
+  padding: var(--sp-3) 0 0;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  text-align: center;
+}

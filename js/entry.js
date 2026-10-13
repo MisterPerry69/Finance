@@ -26,22 +26,39 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("submit-single").addEventListener("click", submitSingle);
   document.getElementById("submit-multi").addEventListener("click", submitMulti);
   document.getElementById("submit-transfer").addEventListener("click", submitTransfer);
+  document.getElementById("submit-fuel").addEventListener("click", submitFuel);
+
+  // €/L calcolato mentre scrivi
+  ["fuel-amount", "fuel-liters"].forEach(id =>
+    document.getElementById(id).addEventListener("input", _updateFuelPrice));
   document.getElementById("add-row-btn").addEventListener("click", addMultiRow);
 });
 
-function openEntryModal() {
+function _todayISO() {
+  const d = new Date();
+  return `${ymOf(d)}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// tab: "single" (default) | "multi" | "transfer" | "fuel"
+function openEntryModal(tab) {
   _entrySign = -1;
   _updateSignButtons();
   document.getElementById("fin-multi-rows").innerHTML = "";
   addMultiRow();
-  _switchEntryTab("single");
+  _switchEntryTab(typeof tab === "string" ? tab : "single");
   _setWallet("BANK");
   document.getElementById("fin-amount").value = "";
   document.getElementById("fin-desc").value   = "";
   document.getElementById("fin-note").value   = "";
   document.getElementById("fin-transfer-amount").value = "";
+  document.getElementById("fuel-amount").value = "";
+  document.getElementById("fuel-liters").value = "";
+  _updateFuelPrice();
+  const today = _todayISO();
+  document.querySelectorAll(".entry-date").forEach(el => { el.value = today; el.max = today; });
   document.getElementById("entry-modal").classList.remove("hidden");
-  setTimeout(() => document.getElementById("fin-amount").focus(), 120);
+  const focusId = tab === "fuel" ? "fuel-amount" : "fin-amount";
+  setTimeout(() => document.getElementById(focusId).focus(), 120);
 }
 
 function closeEntryModal() {
@@ -60,6 +77,7 @@ function _switchEntryTab(tab) {
   document.getElementById("form-single").classList.toggle("hidden",   tab !== "single");
   document.getElementById("form-multi").classList.toggle("hidden",    tab !== "multi");
   document.getElementById("form-transfer").classList.toggle("hidden", tab !== "transfer");
+  document.getElementById("form-fuel").classList.toggle("hidden",     tab !== "fuel");
 }
 
 function _setSign(sign) {
@@ -118,6 +136,7 @@ async function submitSingle() {
   try {
     const res = await _post("finance_smart_entry", {
       amount: _entrySign * Math.abs(rawAmount), desc, note, wallet: _activeWallet,
+      date: document.getElementById("fin-date").value,
     });
     await _afterSave(btn, "Salva", res.status === "AI_PENDING");
   } catch (e) {
@@ -137,6 +156,9 @@ async function submitMulti() {
     if (amt && desc) entries.push({ row, amount: sign * Math.abs(amt), desc, note, wallet });
   });
   if (entries.length === 0) return;
+
+  const date = document.getElementById("fin-multi-date").value;
+  entries.forEach(e => { e.date = date; });
 
   const btn = document.getElementById("submit-multi");
   btn.disabled = true;
@@ -172,6 +194,39 @@ async function submitTransfer() {
   try {
     await _post("finance_transfer", { amount, from, to });
     await _afterSave(btn, "Esegui trasferimento", false);
+  } catch (e) {
+    _fail(btn, e);
+  }
+}
+
+// ---- Submit: fuel ----
+function _updateFuelPrice() {
+  const amt = parseFloat(String(document.getElementById("fuel-amount").value).replace(",", "."));
+  const lit = parseFloat(String(document.getElementById("fuel-liters").value).replace(",", "."));
+  document.getElementById("fuel-price").textContent = amt > 0 && lit > 0
+    ? (amt / lit).toFixed(3).replace(".", ",") + " €/L"
+    : "— €/L";
+}
+
+async function submitFuel() {
+  const amount = parseFloat(String(document.getElementById("fuel-amount").value).replace(",", "."));
+  const liters = parseFloat(String(document.getElementById("fuel-liters").value).replace(",", "."));
+  if (!(amount > 0) || !(liters > 0)) return;
+
+  const btn = document.getElementById("submit-fuel");
+  btn.textContent = "Salvataggio...";
+  btn.disabled    = true;
+
+  try {
+    // "CARBURANTE" → TRASPORTI per regola; i litri in nota alimentano le statistiche
+    await _post("finance_smart_entry", {
+      amount: -Math.abs(amount),
+      desc:   "CARBURANTE",
+      note:   liters.toFixed(2) + " L",
+      wallet: document.getElementById("fuel-wallet").value,
+      date:   document.getElementById("fuel-date").value,
+    });
+    await _afterSave(btn, "Salva rifornimento", false);
   } catch (e) {
     _fail(btn, e);
   }

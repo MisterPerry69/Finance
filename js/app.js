@@ -159,7 +159,7 @@ function setupSwipe() {
 
 // ---- FAB ----
 function setupFAB() {
-  document.getElementById("fab-entry").addEventListener("click", openEntryModal);
+  document.getElementById("fab-entry").addEventListener("click", () => openEntryModal());
 }
 
 // ---- Analyst bubble (toast) ----

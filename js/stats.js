@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("stats-month-next").addEventListener("click", () => _stepStats(+1));
 
   // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
+  document.getElementById("gas-add-btn").addEventListener("click", () => openEntryModal("fuel"));
+
   document.getElementById("pane-stats").addEventListener("click", e => {
     const target = e.target.closest("[data-ym]");
     if (!target || target.disabled) return;
@@ -102,7 +104,8 @@ function _renderStatsMonth() {
     const d = (s.spent - prevAvg) / prevAvg * 100;
     spentSub = `${d >= 0 ? "+" : "−"}${fmtPct(Math.abs(d))} vs media 3 mesi`;
   }
-  _renderKpis(s, spentSub, `${s.count} movimenti`);
+  const prevIncome = prev.length ? prev.reduce((a, p) => a + monthStats(p).income, 0) / prev.length : 0;
+  _renderKpis(s, spentSub, prevIncome > 0 ? `media ${fmtEur(prevIncome, 0)}` : "");
 
   // Andamento: 12 mesi che terminano col mese selezionato
   const items = [];
@@ -232,10 +235,22 @@ function _renderKpis(s, spentSub, incomeSub) {
 
   const netEl = document.getElementById("stat-net");
   netEl.textContent = fmtSigned(s.net);
-  netEl.className   = "kpi-value " + (s.net >= 0 ? "pos" : "neg");
-  document.getElementById("stat-net-sub").textContent = s.income > 0
-    ? `${fmtPct(Math.max(0, s.net) / s.income * 100)} delle entrate messo da parte`
-    : "nessuna entrata nel periodo";
+  netEl.className   = "period-net " + (s.net >= 0 ? "pos" : "neg");
+
+  const chip = document.getElementById("stat-net-chip");
+  if (s.income <= 0 && s.spent <= 0) {
+    chip.textContent = "nessun movimento";
+    chip.className   = "period-chip";
+  } else if (s.income <= 0) {
+    chip.textContent = "nessuna entrata";
+    chip.className   = "period-chip";
+  } else if (s.net >= 0) {
+    chip.textContent = `${fmtPct(s.net / s.income * 100)} delle entrate`;
+    chip.className   = "period-chip pos";
+  } else {
+    chip.textContent = "spese oltre le entrate";
+    chip.className   = "period-chip neg";
+  }
 }
 
 function _trendItem(ym, label) {
@@ -352,12 +367,29 @@ function _renderAutonomy() {
     `Patrimonio ÷ spesa media degli ultimi 3 mesi (${fmtEur(a.avg, 0)}/mese)`;
 }
 
+// La card resta sempre visibile: contiene il pulsante per registrare un rifornimento
 function _renderGas(s) {
-  document.getElementById("gas-spent").textContent     = s.gasSpent  > 0 ? fmtEur(s.gasSpent) : "—";
-  document.getElementById("gas-liters").textContent    = s.gasLiters > 0 ? s.gasLiters.toFixed(1).replace(".", ",") + " L" : "—";
-  document.getElementById("gas-avg-price").textContent = s.gasLiters > 0
-    ? (s.gasSpent / s.gasLiters).toFixed(3).replace(".", ",") + " €/L" : "—";
-  document.getElementById("gas-card").classList.toggle("hidden", s.gasSpent === 0);
+  const dec = (n, d) => n.toFixed(d).replace(".", ",");
+  const has = s.gasLiters > 0;
+  document.getElementById("gas-avg-price").textContent = has ? dec(s.gasSpent / s.gasLiters, 3) : "—";
+  document.getElementById("gas-liters").textContent    = has ? dec(s.gasLiters, 1) : "—";
+  document.getElementById("gas-spent").textContent     = has ? fmtEur(s.gasSpent, 0) : "—";
+
+  const list  = document.getElementById("gas-list");
+  const fills = [...s.gasFills].sort((a, b) => b.date.localeCompare(a.date));
+  if (!fills.length) {
+    list.innerHTML = '<div class="gas-empty">Nessun rifornimento nel periodo</div>';
+    return;
+  }
+  const shown = fills.slice(0, 6);
+  list.innerHTML = shown.map(f => `
+    <div class="gas-fill">
+      <span class="gas-fill-date">${formatDate(f.date, _statsMode === "year")}</span>
+      <span class="gas-fill-liters">${dec(f.liters, 1)} L</span>
+      <span class="gas-fill-ppl">${dec(f.amt / f.liters, 3)} €/L</span>
+      <span class="gas-fill-amt">${fmtEur(f.amt)}</span>
+    </div>`).join("") +
+    (fills.length > shown.length ? `<div class="gas-empty">e altri ${fills.length - shown.length}</div>` : "");
 }
 
 function _renderInsight(lines) {

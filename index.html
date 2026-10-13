@@ -10,8 +10,7 @@
   <link rel="manifest" href="manifest.json" />
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/home.css" />
@@ -93,71 +92,81 @@
 
         <!-- Toggle mensile/annuale -->
         <div class="budget-scope-row">
-          <button class="scope-pill active" id="scope-month">Mensile</button>
-          <button class="scope-pill" id="scope-year">Annuale</button>
+          <button class="scope-pill active" id="scope-month">Mese</button>
+          <button class="scope-pill" id="scope-year">Anno</button>
         </div>
 
         <!-- ===== VISTA MENSILE ===== -->
         <div id="budget-monthly-view">
-          <!-- Hero: residuo mensile -->
           <div class="budget-hero">
-            <div class="budget-hero-label">Budget residuo</div>
+            <div class="budget-hero-label">Puoi ancora spendere</div>
             <div id="budget-remaining" class="budget-hero-num ok">—</div>
-            <div class="budget-hero-sub">su <span id="budget-total-monthly">—</span> stimato dall'AI</div>
+            <div class="budget-hero-sub" id="budget-hero-sub">—</div>
             <div class="budget-hero-bar-wrap">
               <div id="budget-main-bar" class="budget-hero-bar"></div>
+              <div id="budget-main-pace" class="budget-hero-pace hidden"></div>
             </div>
+            <div class="budget-hero-foot" id="budget-hero-foot"></div>
           </div>
 
-          <!-- Cat breakdown con budget per categoria -->
           <div class="card">
-            <div class="budget-card-header">
-              <div class="section-heading no-mb">Per categoria</div>
-              <button id="btn-budget-ai" class="budget-ai-btn">
-                <i data-lucide="sparkles"></i> Ricalcola
-              </button>
-            </div>
+            <div class="section-heading">Per categoria</div>
             <div id="budget-categories-list" class="budget-cat-list"></div>
+            <div id="budget-cats-note" class="budget-note"></div>
           </div>
 
-          <!-- AI insight -->
           <div class="card">
             <div class="ai-block">
-              <div class="ai-block-label">AI Insight</div>
-              <div id="budget-ai-comment" class="ai-block-text">Premi Ricalcola per un'analisi AI del tuo budget.</div>
+              <div class="ai-block-label">In sintesi</div>
+              <div id="budget-summary" class="ai-block-text"></div>
             </div>
           </div>
         </div>
 
         <!-- ===== VISTA ANNUALE ===== -->
         <div id="budget-yearly-view" class="hidden">
-          <!-- Hero: totale spendibile anno -->
           <div class="budget-hero">
-            <div class="budget-hero-label">Spendibile 2026</div>
+            <div class="budget-hero-label" id="budget-year-label">Spendibile</div>
             <div id="budget-year-available" class="budget-hero-num ok">—</div>
-            <div class="budget-hero-sub">residuo su <span id="budget-year-total">—</span> stimato</div>
+            <div class="budget-hero-sub" id="budget-year-sub">—</div>
             <div class="budget-hero-bar-wrap">
               <div id="budget-year-bar" class="budget-hero-bar"></div>
+              <div id="budget-year-pace" class="budget-hero-pace hidden"></div>
             </div>
+            <div class="budget-hero-foot" id="budget-year-foot"></div>
           </div>
 
-          <!-- Per categoria annuale: target vs speso -->
           <div class="card">
-            <div class="budget-card-header">
-              <div class="section-heading no-mb">Budget per categoria</div>
-              <button id="btn-budget-ai-year" class="budget-ai-btn">
-                <i data-lucide="sparkles"></i> Ricalcola
-              </button>
-            </div>
+            <div class="section-heading">Per categoria · da inizio anno</div>
             <div id="budget-year-cats-list" class="budget-cat-list"></div>
+            <div class="budget-note"><p>La tacca indica dove dovresti essere oggi spendendo in modo uniforme.</p></div>
           </div>
 
-          <!-- AI insight annuale -->
           <div class="card">
             <div class="ai-block">
               <div class="ai-block-label">Proiezione anno</div>
-              <div id="budget-ai-year-comment" class="ai-block-text">Premi Ricalcola per un'analisi AI annuale.</div>
+              <div id="budget-year-summary" class="ai-block-text"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- ===== IMPOSTAZIONI (condivise) ===== -->
+        <div class="card budget-settings">
+          <div class="section-heading">Come è calcolato</div>
+          <div id="budget-calc" class="budget-calc"></div>
+
+          <div class="budget-setting">
+            <div class="field-label">Obiettivo di risparmio</div>
+            <div class="savings-chips" id="savings-chips"></div>
+          </div>
+
+          <div class="budget-setting">
+            <label class="field-label" for="budget-income-input">Entrate mensili</label>
+            <div class="budget-income-row">
+              <input type="number" id="budget-income-input" class="field-input" inputmode="decimal" step="10" min="0" />
+              <button id="budget-income-auto" class="budget-ai-btn hidden">Auto</button>
+            </div>
+            <div class="budget-setting-hint" id="budget-income-hint"></div>
           </div>
         </div>
 
@@ -242,35 +251,74 @@
         </div>
       </div>
 
-      <!-- STATS PANE (right) -->
+      <!-- LOGBOOK PANE (right) -->
       <div class="pane" id="pane-stats">
 
-        <!-- Month navigator -->
+        <div class="budget-scope-row">
+          <button class="scope-pill active" id="stats-mode-month">Mese</button>
+          <button class="scope-pill" id="stats-mode-year">Anno</button>
+        </div>
+
+        <!-- Period navigator -->
         <div class="stats-month-nav">
-          <button class="log-month-arrow" id="stats-month-prev" aria-label="Mese precedente">
+          <button class="log-month-arrow" id="stats-month-prev" aria-label="Periodo precedente">
             <i data-lucide="chevron-left"></i>
           </button>
-          <span class="stats-month-label" id="stats-month-label">Giugno 2026</span>
-          <button class="log-month-arrow" id="stats-month-next" aria-label="Mese successivo">
+          <span class="stats-month-label" id="stats-month-label">—</span>
+          <button class="log-month-arrow" id="stats-month-next" aria-label="Periodo successivo">
             <i data-lucide="chevron-right"></i>
           </button>
         </div>
 
-        <!-- KPI row -->
+        <!-- KPI -->
         <div class="stats-kpi-row">
           <div class="kpi-card">
             <div class="kpi-label">Speso</div>
             <div id="stat-total-spent" class="kpi-value neg">—</div>
-            <div class="kpi-sub" id="stat-month-sub">questo mese</div>
+            <div class="kpi-sub" id="stat-spent-sub"></div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Entrate</div>
             <div id="stat-total-income" class="kpi-value pos">—</div>
-            <div class="kpi-sub">entrate mese</div>
+            <div class="kpi-sub" id="stat-income-sub"></div>
+          </div>
+          <div class="kpi-card kpi-wide">
+            <div class="kpi-label">Risparmiato</div>
+            <div id="stat-net" class="kpi-value">—</div>
+            <div class="kpi-sub" id="stat-net-sub"></div>
           </div>
         </div>
 
-        <!-- Survival -->
+        <!-- Andamento -->
+        <div class="card">
+          <div class="trend-header">
+            <div class="section-heading no-mb">Andamento spese</div>
+            <span class="trend-caption" id="trend-caption"></span>
+          </div>
+          <div id="trend-chart" class="trend-chart"></div>
+        </div>
+
+        <!-- Categorie -->
+        <div class="card">
+          <div class="section-heading" id="cats-heading">Per categoria</div>
+          <div id="top-expenses-list" class="cat-breakdown"></div>
+        </div>
+
+        <!-- Mese per mese (solo vista anno) -->
+        <div class="card hidden" id="stats-annual-card">
+          <div class="section-heading">Mese per mese</div>
+          <div id="stats-annual-list" class="log-annual-list"></div>
+        </div>
+
+        <!-- Sintesi -->
+        <div class="card">
+          <div class="ai-block">
+            <div class="ai-block-label">In sintesi</div>
+            <div id="stats-eval" class="ai-block-text"></div>
+          </div>
+        </div>
+
+        <!-- Autonomia -->
         <div class="card">
           <div class="survival-header">
             <div class="section-heading no-mb">Autonomia</div>
@@ -279,29 +327,12 @@
           <div class="prog-wrap">
             <div id="survival-bar-fill" class="prog-fill"></div>
           </div>
+          <div class="kpi-sub" id="survival-sub"></div>
         </div>
 
-        <!-- Top categorie -->
-        <div class="card">
-          <div class="section-heading">Top categorie</div>
-          <div id="top-expenses-list" class="cat-breakdown"></div>
-        </div>
-
-        <!-- Trend 6 mesi -->
-        <div class="card">
-          <div class="section-heading">Andamento</div>
-          <div id="trend-bars" class="trend-months"></div>
-        </div>
-
-        <!-- Riepilogo annuale -->
-        <div class="card hidden" id="stats-annual-card">
-          <div class="section-heading">Riepilogo anno</div>
-          <div id="stats-annual-list" class="log-annual-list"></div>
-        </div>
-
-        <!-- Gas -->
-        <div class="card" id="gas-card">
-          <div class="section-heading">⛽ Carburante</div>
+        <!-- Carburante -->
+        <div class="card hidden" id="gas-card">
+          <div class="section-heading">Carburante</div>
           <div class="gas-row">
             <div class="gas-stat">
               <span class="gas-stat-label">Speso</span>
@@ -315,14 +346,6 @@
               <span class="gas-stat-label">€/L medio</span>
               <span id="gas-avg-price" class="gas-stat-val">—</span>
             </div>
-          </div>
-        </div>
-
-        <!-- AI eval -->
-        <div class="card">
-          <div class="ai-block">
-            <div class="ai-block-label">Analisi AI</div>
-            <div id="stats-eval" class="ai-block-text">Analisi in attesa...</div>
           </div>
         </div>
       </div>
@@ -347,6 +370,9 @@
 
     <!-- Header: titolo centro, X a destra -->
     <div class="log-page-header">
+      <button class="log-annual-toggle" id="log-period-toggle" aria-label="Cambia periodo">
+        <i data-lucide="calendar"></i> <span id="log-period-toggle-text">Anno</span>
+      </button>
       <div class="log-page-title">Registro</div>
       <button class="log-close-btn" id="log-close-btn" aria-label="Chiudi">
         <i data-lucide="x"></i>
@@ -358,7 +384,7 @@
       <button class="log-month-arrow" id="log-month-prev" aria-label="Mese precedente">
         <i data-lucide="chevron-left"></i>
       </button>
-      <button class="log-month-label" id="log-month-label">Giugno 2026</button>
+      <span class="log-month-label" id="log-month-label">—</span>
       <button class="log-month-arrow" id="log-month-next" aria-label="Mese successivo">
         <i data-lucide="chevron-right"></i>
       </button>
@@ -386,6 +412,9 @@
         <option value="SALUTE">Salute</option>
         <option value="ENTRATE">Entrate</option>
         <option value="RIMBORSO">Rimborso</option>
+        <option value="TRASFERIMENTO">Trasferimento</option>
+        <option value="SET_BALANCE">Rettifica saldo</option>
+        <option value="AI_PENDING">Da categorizzare</option>
         <option value="ALTRO">Altro</option>
       </select>
       <select id="log-wallet-filter" class="log-cat-select">
@@ -396,6 +425,9 @@
         <option value="IFIS">Deposito</option>
       </select>
     </div>
+
+    <!-- Totali del periodo/ricerca -->
+    <div id="log-summary" class="log-summary"></div>
 
     <!-- Results -->
     <div id="filtered-results" class="log-results"></div>
@@ -444,7 +476,7 @@
           </div>
           <div class="form-field">
             <label class="field-label">Causale</label>
-            <input type="text" id="fin-desc" class="field-input" placeholder="es. spesa, stipendio..." autocomplete="off" />
+            <input type="text" id="fin-desc" class="field-input" placeholder="es. spesa, stipendio, saldo..." autocomplete="off" />
           </div>
         </div>
         <div class="form-field">
@@ -488,7 +520,6 @@
     </div>
   </div>
 
-  <script src="js/api.js"></script>
   <!-- EDIT TRANSACTION MODAL -->
   <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Modifica transazione">
     <div class="modal-box edit-modal-box">
@@ -527,6 +558,7 @@
             <option value="ENTRATE">Entrate</option>
             <option value="RIMBORSO">Rimborso</option>
             <option value="TRASFERIMENTO">Trasferimento</option>
+            <option value="SET_BALANCE">Rettifica saldo</option>
             <option value="ALTRO">Altro</option>
           </select>
         </div>
@@ -538,6 +570,7 @@
           <label class="edit-label">Note</label>
           <input type="text" id="edit-note" class="edit-input" placeholder="Note (opzionale)">
         </div>
+        <div class="edit-error" id="edit-error" role="alert"></div>
       </div>
       <div class="edit-modal-footer">
         <button class="btn-pill btn-secondary" id="edit-cancel-btn">Annulla</button>
@@ -546,6 +579,8 @@
     </div>
   </div>
 
+  <script src="js/api.js"></script>
+  <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/home.js"></script>
   <script src="js/stats.js"></script>

@@ -11,14 +11,14 @@
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tokens.css?v=3" />
-  <link rel="stylesheet" href="css/base.css?v=3" />
-  <link rel="stylesheet" href="css/home.css?v=3" />
-  <link rel="stylesheet" href="css/stats.css?v=3" />
-  <link rel="stylesheet" href="css/budget.css?v=3" />
-  <link rel="stylesheet" href="css/log.css?v=3" />
-  <link rel="stylesheet" href="css/entry.css?v=3" />
-  <link rel="stylesheet" href="css/edit.css?v=3" />
+  <link rel="stylesheet" href="css/tokens.css?v=4" />
+  <link rel="stylesheet" href="css/base.css?v=4" />
+  <link rel="stylesheet" href="css/home.css?v=4" />
+  <link rel="stylesheet" href="css/stats.css?v=4" />
+  <link rel="stylesheet" href="css/budget.css?v=4" />
+  <link rel="stylesheet" href="css/log.css?v=4" />
+  <link rel="stylesheet" href="css/entry.css?v=4" />
+  <link rel="stylesheet" href="css/edit.css?v=4" />
 </head>
 <body>
 
@@ -253,6 +253,7 @@
         <div class="budget-scope-row">
           <button class="scope-pill active" id="stats-mode-month">Mese</button>
           <button class="scope-pill" id="stats-mode-year">Anno</button>
+          <button class="scope-icon" id="stats-fuel-btn" aria-label="Carburante"><i data-lucide="fuel"></i></button>
         </div>
 
         <!-- Period navigator -->
@@ -328,28 +329,6 @@
           <div class="kpi-sub" id="survival-sub"></div>
         </div>
 
-        <!-- Carburante -->
-        <div class="card" id="gas-card">
-          <div class="card-head">
-            <div class="section-heading no-mb">Carburante</div>
-            <button class="chip-btn" id="gas-add-btn"><i data-lucide="fuel"></i> Rifornimento</button>
-          </div>
-          <div class="gas-tiles">
-            <div class="gas-tile">
-              <span id="gas-avg-price" class="gas-tile-val">—</span>
-              <span class="gas-tile-label">€/litro</span>
-            </div>
-            <div class="gas-tile">
-              <span id="gas-liters" class="gas-tile-val">—</span>
-              <span class="gas-tile-label">litri</span>
-            </div>
-            <div class="gas-tile">
-              <span id="gas-spent" class="gas-tile-val">—</span>
-              <span class="gas-tile-label">speso</span>
-            </div>
-          </div>
-          <div id="gas-list" class="gas-list"></div>
-        </div>
       </div>
 
     </div><!-- /deck-track -->
@@ -439,8 +418,6 @@
   <!-- ENTRY MODAL -->
   <div id="entry-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Nuova transazione">
     <div class="modal-box">
-      <div class="modal-handle"></div>
-
       <div class="modal-header">
         <div class="modal-title">Nuova voce</div>
         <button class="icon-btn modal-close" id="modal-close-btn" aria-label="Chiudi">
@@ -450,10 +427,10 @@
 
       <!-- Entry type tabs -->
       <div class="entry-type-tabs">
-        <button class="entry-type-tab active" data-tab="single">Singola</button>
-        <button class="entry-type-tab" data-tab="multi">Multipla</button>
-        <button class="entry-type-tab" data-tab="transfer">Sposta</button>
-        <button class="entry-type-tab" data-tab="fuel">Carburante</button>
+        <button class="entry-type-tab active" data-tab="single"><i data-lucide="receipt"></i><span>Singola</span></button>
+        <button class="entry-type-tab" data-tab="multi"><i data-lucide="list-plus"></i><span>Multipla</span></button>
+        <button class="entry-type-tab" data-tab="transfer"><i data-lucide="arrow-right-left"></i><span>Sposta</span></button>
+        <button class="entry-type-tab" data-tab="fuel"><i data-lucide="fuel"></i><span>Carburante</span></button>
       </div>
 
       <!-- Single form -->
@@ -497,10 +474,6 @@
 
       <!-- Multi form (conto nella riga, no wallet selector globale) -->
       <div id="form-multi" class="entry-form hidden">
-        <div class="form-field">
-          <label class="field-label">Data (vale per tutte le righe)</label>
-          <input type="date" id="fin-multi-date" class="field-input entry-date" />
-        </div>
         <div id="fin-multi-rows" class="multi-rows"></div>
         <button id="add-row-btn" class="add-row-btn">+ Aggiungi riga</button>
         <button id="submit-multi" class="submit-btn">Salva tutto</button>
@@ -564,6 +537,37 @@
     </div>
   </div>
 
+  <!-- FUEL MODAL (statistiche carburante del periodo del Logbook) -->
+  <div id="fuel-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Carburante">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Carburante</div>
+          <div class="modal-subtitle" id="gas-period">—</div>
+        </div>
+        <button class="icon-btn modal-close" id="fuel-modal-close" aria-label="Chiudi">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="gas-tiles">
+        <div class="gas-tile">
+          <span id="gas-avg-price" class="gas-tile-val">—</span>
+          <span class="gas-tile-label">€/litro</span>
+        </div>
+        <div class="gas-tile">
+          <span id="gas-liters" class="gas-tile-val">—</span>
+          <span class="gas-tile-label">litri</span>
+        </div>
+        <div class="gas-tile">
+          <span id="gas-spent" class="gas-tile-val">—</span>
+          <span class="gas-tile-label">speso</span>
+        </div>
+      </div>
+      <div id="gas-list" class="gas-list"></div>
+      <button id="gas-add-btn" class="submit-btn gas-add"><i data-lucide="plus"></i> Rifornimento</button>
+    </div>
+  </div>
+
   <!-- EDIT TRANSACTION MODAL -->
   <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Modifica transazione">
     <div class="modal-box edit-modal-box">
@@ -578,6 +582,10 @@
         <div class="edit-field-group">
           <label class="edit-label">Importo</label>
           <input type="number" id="edit-amount" class="edit-input" step="0.01" placeholder="0.00">
+        </div>
+        <div class="edit-field-group">
+          <label class="edit-label">Data</label>
+          <input type="date" id="edit-date" class="edit-input">
         </div>
         <div class="edit-field-group">
           <label class="edit-label">Conto</label>
@@ -623,14 +631,14 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=3"></script>
-  <script src="js/data.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
-  <script src="js/home.js?v=3"></script>
-  <script src="js/stats.js?v=3"></script>
-  <script src="js/budget.js?v=3"></script>
-  <script src="js/log.js?v=3"></script>
-  <script src="js/entry.js?v=3"></script>
-  <script src="js/edit.js?v=3"></script>
+  <script src="js/api.js?v=4"></script>
+  <script src="js/data.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
+  <script src="js/home.js?v=4"></script>
+  <script src="js/stats.js?v=4"></script>
+  <script src="js/budget.js?v=4"></script>
+  <script src="js/log.js?v=4"></script>
+  <script src="js/entry.js?v=4"></script>
+  <script src="js/edit.js?v=4"></script>
 </body>
 </html>

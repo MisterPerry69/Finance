@@ -153,12 +153,10 @@ async function submitMulti() {
     const amt    = parseFloat(String(row.querySelector(".multi-row-amount").value).replace(",", "."));
     const [desc, note] = _splitDescNote(row.querySelector(".multi-row-desc").value);
     const wallet = row.querySelector(".multi-row-wallet").value;
-    if (amt && desc) entries.push({ row, amount: sign * Math.abs(amt), desc, note, wallet });
+    const date   = row.querySelector(".multi-row-date").value;
+    if (amt && desc) entries.push({ row, amount: sign * Math.abs(amt), desc, note, wallet, date });
   });
   if (entries.length === 0) return;
-
-  const date = document.getElementById("fin-multi-date").value;
-  entries.forEach(e => { e.date = date; });
 
   const btn = document.getElementById("submit-multi");
   btn.disabled = true;
@@ -233,22 +231,32 @@ async function submitFuel() {
 }
 
 // ---- Multi row ----
+// Ogni riga ha la sua data e il suo conto; una nuova riga eredita quelli dell'ultima
 function addMultiRow() {
   const container = document.getElementById("fin-multi-rows");
+  const last      = container.querySelector(".multi-row:last-child");
+  const today     = _todayISO();
   const row       = document.createElement("div");
   row.className   = "multi-row";
   row.innerHTML = `
-    <button class="multi-row-sign negative" data-sign="-1">−</button>
-    <input type="number" class="field-input multi-row-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
-    <input type="text" class="field-input multi-row-desc" placeholder="causale, note..." autocomplete="off" />
-    <select class="field-select multi-row-wallet">
-      <option value="BANK">Bank</option>
-      <option value="PAYPAL">PayPal</option>
-      <option value="CASH">Cash</option>
-      <option value="IFIS">Deposito</option>
-    </select>
-    <button class="multi-row-del" aria-label="Rimuovi">✕</button>
+    <div class="multi-row-main">
+      <button class="multi-row-sign negative" data-sign="-1">−</button>
+      <input type="number" class="field-input multi-row-amount" placeholder="0.00" min="0" step="0.01" inputmode="decimal" />
+      <input type="text" class="field-input multi-row-desc" placeholder="causale, note..." autocomplete="off" />
+      <button class="multi-row-del" aria-label="Rimuovi">✕</button>
+    </div>
+    <div class="multi-row-meta">
+      <input type="date" class="multi-row-date" max="${today}" />
+      <select class="multi-row-wallet">
+        <option value="BANK">Bank</option>
+        <option value="PAYPAL">PayPal</option>
+        <option value="CASH">Cash</option>
+        <option value="IFIS">Deposito</option>
+      </select>
+    </div>
   `;
+  row.querySelector(".multi-row-date").value   = last ? last.querySelector(".multi-row-date").value   : today;
+  row.querySelector(".multi-row-wallet").value = last ? last.querySelector(".multi-row-wallet").value : "BANK";
   row.querySelector(".multi-row-sign").addEventListener("click", e => {
     const b  = e.currentTarget;
     const s  = parseInt(b.dataset.sign) * -1;

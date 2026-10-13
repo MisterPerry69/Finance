@@ -17,7 +17,19 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("stats-month-next").addEventListener("click", () => _stepStats(+1));
 
   // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
-  document.getElementById("gas-add-btn").addEventListener("click", () => openEntryModal("fuel"));
+  // Carburante: statistiche in un modal dedicato, aperto dall'icona in cima al Logbook
+  const fuelModal = document.getElementById("fuel-modal");
+  const closeFuel = () => fuelModal.classList.add("hidden");
+  document.getElementById("stats-fuel-btn").addEventListener("click", () => {
+    fuelModal.classList.remove("hidden");
+    refreshIcons();
+  });
+  document.getElementById("fuel-modal-close").addEventListener("click", closeFuel);
+  fuelModal.addEventListener("click", e => { if (e.target === fuelModal) closeFuel(); });
+  document.getElementById("gas-add-btn").addEventListener("click", () => {
+    closeFuel();
+    openEntryModal("fuel");
+  });
 
   document.getElementById("pane-stats").addEventListener("click", e => {
     const target = e.target.closest("[data-ym]");
@@ -371,6 +383,8 @@ function _renderAutonomy() {
 function _renderGas(s) {
   const dec = (n, d) => n.toFixed(d).replace(".", ",");
   const has = s.gasLiters > 0;
+  document.getElementById("gas-period").textContent =
+    _statsMode === "month" ? ymLabel(_statsYM) : `Anno ${_statsYear}`;
   document.getElementById("gas-avg-price").textContent = has ? dec(s.gasSpent / s.gasLiters, 3) : "—";
   document.getElementById("gas-liters").textContent    = has ? dec(s.gasLiters, 1) : "—";
   document.getElementById("gas-spent").textContent     = has ? fmtEur(s.gasSpent, 0) : "—";
@@ -381,7 +395,7 @@ function _renderGas(s) {
     list.innerHTML = '<div class="gas-empty">Nessun rifornimento nel periodo</div>';
     return;
   }
-  const shown = fills.slice(0, 6);
+  const shown = fills.slice(0, 12);
   list.innerHTML = shown.map(f => `
     <div class="gas-fill">
       <span class="gas-fill-date">${formatDate(f.date, _statsMode === "year")}</span>

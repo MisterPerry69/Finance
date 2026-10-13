@@ -355,3 +355,45 @@
   color: var(--text-dim-2);
   text-align: center;
 }
+
+/* ---- Tasto carburante (solo icona) accanto a Mese/Anno ---- */
+.scope-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-soft);
+  border-radius: var(--r-pill);
+  color: var(--color-gas);
+  box-shadow: var(--shadow-sm);
+  transition: background var(--t-fast);
+}
+.scope-icon:active { background: rgba(217,119,6,0.10); }
+.scope-icon svg { width: 17px; height: 17px; stroke-width: 2; }
+
+/* ---- Modal carburante ---- */
+.modal-subtitle {
+  margin-top: 2px;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text-dim-2);
+}
+#fuel-modal .gas-tile { background: var(--bg-card); box-shadow: var(--shadow-sm); }
+#fuel-modal .gas-tile:first-child { background: rgba(217,119,6,0.10); box-shadow: none; }
+#fuel-modal .gas-list {
+  margin-top: var(--sp-4);
+  padding: 0 var(--sp-4);
+  background: var(--bg-card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+}
+#fuel-modal .gas-empty { padding: var(--sp-4) 0; }
+.gas-add {
+  margin-top: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+.gas-add svg { width: 18px; height: 18px; stroke-width: 2.5; }

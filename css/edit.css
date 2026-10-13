@@ -4,7 +4,11 @@
 
 .edit-modal-box {
   padding: 0;
-  overflow: hidden;
+  overflow: hidden auto;
+}
+.edit-modal-box .modal-header {
+  padding: var(--sp-5) var(--sp-5) 0;
+  margin-bottom: 0;
 }
 
 .edit-modal-body {
@@ -49,7 +53,7 @@
 .edit-modal-footer {
   display: flex;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-5) calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
   border-top: 1px solid var(--border-ghost);
 }
 

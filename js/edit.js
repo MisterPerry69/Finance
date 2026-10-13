@@ -5,6 +5,9 @@
 function openEditModal(tx) {
   document.getElementById("edit-row-index").value = tx.rowIndex;
   document.getElementById("edit-amount").value    = tx.amt;
+  const dateEl = document.getElementById("edit-date");
+  dateEl.value = tx.date || "";
+  dateEl.max   = _todayISO();
   document.getElementById("edit-wallet").value    = tx.wallet || "BANK";
   // AI_PENDING non è selezionabile: si propone ALTRO e l'utente sceglie
   document.getElementById("edit-cat").value       = tx.cat && tx.cat !== "AI_PENDING" ? tx.cat : "ALTRO";
@@ -38,6 +41,7 @@ async function _saveEdit() {
     const res = await apiPost("finance_update_transaction", {
       rowIndex,
       amount,
+      date:   document.getElementById("edit-date").value,
       wallet: document.getElementById("edit-wallet").value,
       cat:    document.getElementById("edit-cat").value,
       desc:   document.getElementById("edit-desc").value.trim(),

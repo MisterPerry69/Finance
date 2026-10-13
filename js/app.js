@@ -1,11 +1,11 @@
 /* ============================================
-   CASSA — App init, swipe navigation, shared utils
+   TIDE — App init, swipe navigation, shared utils
    ============================================ */
 
 // ---- State ----
-let _currentPane = "home";
-let _cachedData  = null;
+let _currentPane   = "home";
 let _balanceHidden = false;
+let _dataReady     = false;
 
 const PANE_ORDER  = ["budget", "home", "stats"];
 const PANE_ACCENT = {
@@ -23,9 +23,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("open-log-btn").addEventListener("click", openLogModal);
 
-  const [_bar, _data] = await Promise.all([
+  const [, loadError] = await Promise.all([
     _animateSplashBar(),
-    loadData().catch(() => null),
+    loadData().then(() => null, err => err),
   ]);
 
   const splash = document.getElementById("splash");
@@ -35,8 +35,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => {
       splash.style.display = "none";
       document.getElementById("app").classList.remove("hidden");
-      // kick off icons after app is visible
-      if (lucide) lucide.createIcons();
+      refreshIcons();
+      if (loadError) showAnalyst("Impossibile caricare i dati: " + escapeHtml(loadError.message));
     }, 480);
   }, 160);
 });
@@ -54,11 +54,20 @@ function _animateSplashBar() {
 }
 
 // ---- Data loading ----
+// Scarica tutto e ridisegna ogni vista: dopo un inserimento o una modifica
+// home, budget, logbook e registro restano allineati.
 async function loadData() {
-  const data = await apiGet("finance_get_data");
-  _cachedData = data;
-  renderHome(data);
-  return data;
+  await fetchAllTransactions();
+  _dataReady = true;
+  renderAll();
+}
+
+function renderAll() {
+  if (!_dataReady) return;
+  renderHome();
+  renderStats();
+  renderBudget();
+  if (typeof isLogOpen === "function" && isLogOpen()) renderLog();
 }
 
 // ---- Tab navigation ----
@@ -76,15 +85,11 @@ function navigateToPane(pane, animate) {
     ? "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)"
     : "none";
   // deck-track is 300% wide; each pane is 33.333% of track = 100% of viewport.
-  // Shift by toIdx * 33.333% of track width.
   track.style.transform = `translateX(${toIdx * -33.3333}%)`;
 
   _currentPane = pane;
   _updateTabUI();
   _updateAccent();
-
-  if (pane === "stats"  && _cachedData) renderStats(_cachedData);
-  if (pane === "budget") loadBudget();
 }
 
 function _updateTabUI() {
@@ -157,7 +162,7 @@ function setupFAB() {
   document.getElementById("fab-entry").addEventListener("click", openEntryModal);
 }
 
-// ---- Analyst bubble ----
+// ---- Analyst bubble (toast) ----
 function setupAnalystBubble() {
   document.getElementById("analyst-bubble").addEventListener("click", () => {
     document.getElementById("analyst-bubble").classList.remove("active");
@@ -171,11 +176,14 @@ function showAnalyst(html, autoDismissMs) {
   void bubble.offsetWidth;
   text.innerHTML = html;
   bubble.classList.add("active");
-  if (lucide) lucide.createIcons({ nodes: [bubble] });
   if (autoDismissMs) setTimeout(() => bubble.classList.remove("active"), autoDismissMs);
 }
 
 // ---- Shared utils ----
+function refreshIcons() {
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -196,15 +204,15 @@ const CAT_ICONS = {
   SPESA:         "shopping-cart",
   SHOPPING:      "shopping-bag",
   SVAGO:         "gamepad-2",
-  CASA:          "home",
+  CASA:          "house",
   SALUTE:        "heart",
   TRASPORTI:     "car",
   TECH:          "cpu",
-  LAVORO:        "briefcase",
   ENTRATE:       "trending-up",
   RIMBORSO:      "corner-down-left",
   TRASFERIMENTO: "arrow-right-left",
   SET_BALANCE:   "refresh-cw",
+  AI_PENDING:    "hourglass",
   ALTRO:         "layers",
 };
 
@@ -222,33 +230,35 @@ const CAT_COLORS = {
   RIMBORSO:   "#34d399",
 };
 
-function catIcon(cat) {
-  return CAT_ICONS[String(cat).toUpperCase()] || "circle";
-}
-function catColor(cat) {
-  return CAT_COLORS[String(cat).toUpperCase()] || "#7E9BA5";
-}
+const CAT_LABELS = {
+  SET_BALANCE: "RETTIFICA SALDO",
+  AI_PENDING:  "DA CATEGORIZZARE",
+};
 
-function renderTransactionRows(transactions) {
+function catIcon(cat)  { return CAT_ICONS[String(cat).toUpperCase()] || "circle"; }
+function catColor(cat) { return CAT_COLORS[String(cat).toUpperCase()] || "#7E9BA5"; }
+function catLabel(cat) { return CAT_LABELS[String(cat).toUpperCase()] || String(cat).toUpperCase(); }
+
+// transactions: oggetti della cache (data.js); opts.withYear mostra la data completa
+function renderTransactionRows(transactions, opts) {
   if (!transactions || transactions.length === 0) {
     return '<div class="empty-state">Nessuna transazione</div>';
   }
+  const withYear = !!(opts && opts.withYear);
   return transactions.map(t => {
-    const isPending = String(t.cat).toUpperCase() === "AI_PENDING";
-    const amt       = parseFloat(t.amt);
+    const isPending = t.cat === "AI_PENDING";
+    const amt       = t.amt;
     const isPos     = amt >= 0;
     const hasNote   = t.note && t.note.trim();
-    const amtStr    = isPending
-      ? '<span class="trans-amount pending">~</span>'
-      : `<span class="trans-amount ${isPos ? "positive" : "negative"}">${isPos ? "+" : ""}${amt.toFixed(2)}€</span>`;
-    const rowIdx = t.rowIndex || "";
+    const amtStr    = `<span class="trans-amount ${isPos ? "positive" : "negative"}">${fmtSigned(amt)}</span>`;
+    const dateStr   = formatDate(t.date, withYear);
     return `
-      <div class="trans-row${isPending ? " pending-row" : ""}" data-row-index="${rowIdx}">
-        <button class="trans-edit-btn" data-row-index="${rowIdx}" aria-label="Modifica transazione"><i data-lucide="pencil"></i></button>
+      <div class="trans-row${isPending ? " pending-row" : ""}" data-row-index="${t.rowIndex}">
+        <button class="trans-edit-btn" data-row-index="${t.rowIndex}" aria-label="Modifica transazione"><i data-lucide="pencil"></i></button>
         <div class="trans-icon-wrap"><i data-lucide="${catIcon(t.cat)}"></i></div>
         <div class="trans-body">
           <div class="trans-desc">${escapeHtml(t.desc)}</div>
-          <div class="trans-meta">${isPending ? "⏳ DA CATEGORIZZARE" : escapeHtml(t.cat)}${t.date ? " · " + escapeHtml(t.date) : ""}</div>
+          <div class="trans-meta">${escapeHtml(catLabel(t.cat))}${dateStr ? " · " + dateStr : ""} · ${escapeHtml(walletLabel(t.wallet))}</div>
           ${hasNote ? `<div class="trans-note-tag">${escapeHtml(t.note)}</div>` : ""}
         </div>
         <div class="trans-right">${amtStr}</div>
@@ -256,6 +266,7 @@ function renderTransactionRows(transactions) {
   }).join("");
 }
 
-function bindTransactionInfoBtns() { /* rimosso — nota già visibile inline */ }
+const WALLET_LABELS = { BANK: "Bank", PAYPAL: "PayPal", CASH: "Cash", IFIS: "Deposito" };
+function walletLabel(w) { return WALLET_LABELS[w] || w; }
 
 // openLogModal / closeLogModal defined in log.js

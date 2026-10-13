@@ -1,180 +1,186 @@
 /* ============================================
-   TIDE — Log full-page
+   TIDE — Registro (log full-page)
+   Filtri e ricerca lavorano sulla cache locale: nessuna attesa.
    ============================================ */
 
-let _aiSearchActive  = false;
-let _logCurrentYM    = "";
-let _logSearchActive = false;
-let _lastLogData     = [];  // cache per filtro wallet lato client; sync su window in _renderLogResults
-
-const MONTH_NAMES = [
-  "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
-  "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"
-];
+let _aiSearchActive = false;
+let _logPeriod      = "month";  // "month" | "year"
+let _logYM          = "";
+let _logQuery       = "";       // testo cercato (su tutti i periodi)
+let _searchTimer    = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const input        = document.getElementById("finance-search");
   const clearBtn     = document.getElementById("search-clear");
   const aiToggle     = document.getElementById("ai-search-toggle");
-  const aiStatus     = document.getElementById("ai-status");
   const catSelect    = document.getElementById("log-cat-filter");
   const walletSelect = document.getElementById("log-wallet-filter");
 
-  const now = new Date();
-  _logCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  _logYM = currentYM();
 
   document.getElementById("log-close-btn").addEventListener("click", closeLogModal);
+  document.getElementById("log-month-prev").addEventListener("click", () => _stepLogPeriod(-1));
+  document.getElementById("log-month-next").addEventListener("click", () => _stepLogPeriod(+1));
+  document.getElementById("log-period-toggle").addEventListener("click", () => {
+    _logPeriod = _logPeriod === "month" ? "year" : "month";
+    renderLog();
+  });
 
-  // Month navigation
-  document.getElementById("log-month-prev").addEventListener("click", () => _stepMonth(-1));
-  document.getElementById("log-month-next").addEventListener("click", () => _stepMonth(+1));
-
-  // Search input
+  // Ricerca: istantanea sulla cache; con AI attiva parte solo con Invio
   input.addEventListener("input", () => {
     clearBtn.classList.toggle("hidden", !input.value);
-    if (input.value) { catSelect.value = ""; catSelect.classList.remove("has-value"); }
+    if (_aiSearchActive) return;
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => { _logQuery = input.value.trim(); renderLog(); }, 150);
   });
   input.addEventListener("keyup", e => {
-    if (e.key === "Enter") {
-      const q = input.value.trim();
-      if (q) { _logSearchActive = true; runSearch(q); }
-      else   { _logSearchActive = false; _showMonthView(); }
-    }
+    if (e.key !== "Enter") return;
+    const q = input.value.trim();
+    if (_aiSearchActive && q) _runAiSearch(q);
+    else { _logQuery = q; renderLog(); }
   });
 
   clearBtn.addEventListener("click", () => {
     input.value = "";
     clearBtn.classList.add("hidden");
-    catSelect.value = ""; catSelect.classList.remove("has-value");
-    walletSelect.value = ""; walletSelect.classList.remove("has-value");
-    _logSearchActive = false;
-    _showMonthView();
+    _logQuery = "";
+    renderLog();
   });
 
-  // AI toggle
   aiToggle.addEventListener("click", () => {
     _aiSearchActive = !_aiSearchActive;
-    aiStatus.textContent = _aiSearchActive ? "ON" : "OFF";
+    document.getElementById("ai-status").textContent = _aiSearchActive ? "ON" : "OFF";
     aiToggle.classList.toggle("active", _aiSearchActive);
+    input.placeholder = _aiSearchActive ? "Chiedi, poi premi Invio..." : "Cerca...";
   });
 
-  // Category dropdown — server search
   catSelect.addEventListener("change", () => {
-    const cat = catSelect.value;
-    input.value = ""; clearBtn.classList.add("hidden");
-    catSelect.classList.toggle("has-value", !!cat);
-    if (cat) { _logSearchActive = true; runSearch(cat); }
-    else     { _logSearchActive = false; _showMonthView(); }
+    catSelect.classList.toggle("has-value", !!catSelect.value);
+    renderLog();
   });
-
-  // Wallet dropdown — client-side filter on cached results
   walletSelect.addEventListener("change", () => {
     walletSelect.classList.toggle("has-value", !!walletSelect.value);
-    _applyWalletFilter();
+    renderLog();
   });
 });
-
-function _applyWalletFilter() {
-  const wallet = document.getElementById("log-wallet-filter").value;
-  const filtered = wallet
-    ? _lastLogData.filter(t => String(t.wallet).toUpperCase() === wallet)
-    : _lastLogData;
-  _renderLogResults(filtered, false);
-}
 
 // ---- Open / Close ----
 function openLogModal() {
   const modal = document.getElementById("log-modal");
   modal.classList.remove("hidden");
-  if (lucide) lucide.createIcons({ nodes: [modal] });
 
-  document.getElementById("finance-search").value = "";
+  const input = document.getElementById("finance-search");
+  input.value = "";
+  input.placeholder = "Cerca...";
   document.getElementById("search-clear").classList.add("hidden");
   document.getElementById("ai-search-toggle").classList.remove("active");
   document.getElementById("ai-status").textContent = "OFF";
-  document.getElementById("log-cat-filter").value = "";
-  document.getElementById("log-cat-filter").classList.remove("has-value");
-  document.getElementById("log-wallet-filter").value = "";
-  document.getElementById("log-wallet-filter").classList.remove("has-value");
-  _aiSearchActive  = false;
-  _logSearchActive = false;
-  _lastLogData     = [];
+  ["log-cat-filter", "log-wallet-filter"].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = "";
+    el.classList.remove("has-value");
+  });
+  _aiSearchActive = false;
+  _logQuery  = "";
+  _logPeriod = "month";
+  _logYM     = currentYM();
 
-  const now = new Date();
-  _logCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-
-  _updateMonthLabel();
-  _showMonthView();
+  renderLog();
 }
 
 function closeLogModal() {
   document.getElementById("log-modal").classList.add("hidden");
 }
 
-// ---- Month navigation ----
-function _stepMonth(delta) {
-  const [y, m] = _logCurrentYM.split("-").map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  _logCurrentYM = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-  _updateMonthLabel();
-  if (!_logSearchActive) _showMonthView();
+function isLogOpen() {
+  return !document.getElementById("log-modal").classList.contains("hidden");
 }
 
-function _updateMonthLabel() {
-  const [y, m] = _logCurrentYM.split("-").map(Number);
-  document.getElementById("log-month-label").textContent = `${MONTH_NAMES[m-1]} ${y}`;
+// ---- Periodo ----
+function _stepLogPeriod(delta) {
+  if (_logPeriod === "month") {
+    const next = addMonths(_logYM, delta);
+    if (next > currentYM()) return;
+    _logYM = next;
+  } else {
+    const y = parseInt(_logYM.slice(0, 4), 10) + delta;
+    if (y > new Date().getFullYear()) return;
+    const ym = `${y}-${_logYM.slice(5, 7)}`;
+    _logYM = ym > currentYM() ? currentYM() : ym;
+  }
+  renderLog();
 }
 
-async function _showMonthView() {
+// ---- Ricerca ----
+function _searchText(t) {
+  const [y, m] = t.date ? t.date.split("-") : ["", ""];
+  const monthName = m ? MONTH_NAMES[parseInt(m, 10) - 1] : "";
+  return [formatDate(t.date, true), monthName, y, t.cat, catLabel(t.cat), t.desc, t.note,
+          walletLabel(t.wallet), Math.abs(t.amt).toFixed(2), Math.abs(t.amt).toFixed(2).replace(".", ",")]
+    .join(" ").toLowerCase();
+}
+
+// Tutte le parole devono comparire (in qualsiasi ordine)
+function _matches(t, query) {
+  const text = _searchText(t);
+  return query.toLowerCase().split(/\s+/).filter(Boolean).every(w => text.includes(w));
+}
+
+async function _runAiSearch(q) {
   const container = document.getElementById("filtered-results");
-  container.innerHTML = '<div class="loading-text">Caricamento...</div>';
+  container.innerHTML = '<div class="loading-text">L\'AI sta interpretando la richiesta...</div>';
   try {
-    const data = await apiGet("finance_filter_month", { ym: _logCurrentYM });
-    _renderLogResults(data, true);
-  } catch(e) {
-    container.innerHTML = '<div class="empty-state">Errore connessione</div>';
+    const res = await apiPost("finance_search_ai", { q });
+    _logQuery = (res && res.q) || q;
+  } catch (e) {
+    _logQuery = q;
   }
+  renderLog();
 }
 
-// ---- Search ----
-async function runSearch(query) {
-  if (!query) return;
+// ---- Render ----
+function renderLog() {
+  const searching = !!_logQuery;
+  const year      = parseInt(_logYM.slice(0, 4), 10);
+  const cat       = document.getElementById("log-cat-filter").value;
+  const wallet    = document.getElementById("log-wallet-filter").value;
+
+  // Navigazione periodo
+  const nav = document.querySelector(".log-month-nav");
+  nav.classList.toggle("is-searching", searching);
+  const label = document.getElementById("log-month-label");
+  if (searching) label.textContent = `Ricerca: "${_logQuery}" · tutti i periodi`;
+  else label.textContent = _logPeriod === "month" ? ymLabel(_logYM) : `Anno ${year}`;
+  const toggle = document.getElementById("log-period-toggle");
+  toggle.classList.toggle("active", _logPeriod === "year");
+  document.getElementById("log-period-toggle-text").textContent = _logPeriod === "year" ? "Mese" : "Anno";
+
+  const first = firstDataYM();
+  document.getElementById("log-month-next").disabled = _logPeriod === "month"
+    ? _logYM >= currentYM() : year >= new Date().getFullYear();
+  document.getElementById("log-month-prev").disabled = !first || (_logPeriod === "month"
+    ? _logYM <= first : year <= parseInt(first.slice(0, 4), 10));
+
+  let items;
+  if (searching)                  items = _tx.filter(t => t.date && _matches(t, _logQuery));
+  else if (_logPeriod === "month") items = _tx.filter(t => t.ym === _logYM);
+  else                             items = _tx.filter(t => t.year === year);
+  if (cat)    items = items.filter(t => t.cat === cat);
+  if (wallet) items = items.filter(t => t.wallet === wallet);
+
+  // Più recenti prima (a parità di giorno, ultimo inserito prima)
+  items.sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.rowIndex - a.rowIndex);
+
+  const s = _statsOf(items);
+  document.getElementById("log-summary").innerHTML = items.length
+    ? `<span>${items.length} moviment${items.length === 1 ? "o" : "i"}</span>
+       <span class="neg">−${fmtEur(s.spent)}</span>
+       <span class="pos">+${fmtEur(s.income)}</span>`
+    : "";
+
   const container = document.getElementById("filtered-results");
-  container.innerHTML = '<div class="loading-text">Ricerca in corso...</div>';
-  try {
-    const action = _aiSearchActive ? "finance_search_ai" : "finance_search";
-    const data   = await apiGet(action, { q: query });
-    _renderLogResults(data, true);
-  } catch(e) {
-    container.innerHTML = '<div class="empty-state">Errore connessione</div>';
-  }
-}
-
-function _renderLogResults(items, updateCache) {
-  if (updateCache) { _lastLogData = items || []; window._lastLogData = _lastLogData; }
-  const wallet = document.getElementById("log-wallet-filter").value;
-  const toShow = wallet
-    ? (items || []).filter(t => String(t.wallet).toUpperCase() === wallet)
-    : (items || []);
-
-  const container = document.getElementById("filtered-results");
-  if (!toShow || toShow.length === 0) {
-    container.innerHTML = '<div class="empty-state">Nessun risultato</div>';
-    return;
-  }
-  container.innerHTML = renderTransactionRows(toShow);
-  if (lucide) lucide.createIcons({ nodes: [container] });
-}
-
-// Chiamata da edit.js dopo il salvataggio — ricarica la vista corrente
-function _refreshAfterEdit() {
-  const q = document.getElementById("finance-search").value.trim();
-  if (q) {
-    // Ricarica la ricerca
-    const useAI = _aiSearchActive;
-    const action = useAI ? "finance_search_ai" : "finance_search";
-    apiPost(action, { q }).then(rows => _renderLogResults(rows, true)).catch(console.error);
-  } else if (_logCurrentYM) {
-    apiPost("finance_filter_month", { ym: _logCurrentYM }).then(rows => _renderLogResults(rows, true)).catch(console.error);
-  }
+  container.innerHTML = items.length
+    ? renderTransactionRows(items, { withYear: searching || _logPeriod === "year" })
+    : '<div class="empty-state">Nessun risultato</div>';
+  refreshIcons();
 }

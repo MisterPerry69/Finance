@@ -1,5 +1,5 @@
 /* ============================================
-   CASSA — Entry modal
+   TIDE — Entry modal
    ============================================ */
 
 let _activeWallet = "BANK";
@@ -39,6 +39,7 @@ function openEntryModal() {
   document.getElementById("fin-amount").value = "";
   document.getElementById("fin-desc").value   = "";
   document.getElementById("fin-note").value   = "";
+  document.getElementById("fin-transfer-amount").value = "";
   document.getElementById("entry-modal").classList.remove("hidden");
   setTimeout(() => document.getElementById("fin-amount").focus(), 120);
 }
@@ -71,33 +72,56 @@ function _updateSignButtons() {
   document.getElementById("fin-sign-btn-plus").classList.toggle("selected", _entrySign === 1);
 }
 
+// Errore esplicito se il backend risponde ERROR (prima veniva mostrato "Salvato" comunque)
+async function _post(action, payload) {
+  const res = await apiPost(action, payload);
+  if (!res || (res.status !== "SUCCESS" && res.status !== "AI_PENDING")) {
+    throw new Error((res && res.message) || "Salvataggio non riuscito");
+  }
+  return res;
+}
+
+function _splitDescNote(text) {
+  const i = text.indexOf(",");
+  return i === -1 ? [text.trim(), ""] : [text.slice(0, i).trim(), text.slice(i + 1).trim()];
+}
+
+async function _afterSave(btn, label, pending) {
+  btn.textContent = "✓ Salvato";
+  if (pending) showAnalyst("Salvato. L'AI non ha potuto assegnare la categoria: correggila dal registro.", 4000);
+  try { await loadData(); } catch (e) { showAnalyst("Salvato, ma non riesco ad aggiornare i dati."); }
+  setTimeout(() => {
+    closeEntryModal();
+    btn.textContent = label;
+    btn.disabled    = false;
+  }, 400);
+}
+
+function _fail(btn, err) {
+  console.error(err);
+  btn.textContent = "Errore — riprova";
+  btn.disabled    = false;
+  showAnalyst(escapeHtml(err.message || "Errore di connessione"), 4000);
+}
+
 // ---- Submit: single ----
 async function submitSingle() {
-  const rawAmount = parseFloat(document.getElementById("fin-amount").value);
+  const rawAmount = parseFloat(String(document.getElementById("fin-amount").value).replace(",", "."));
   const desc      = document.getElementById("fin-desc").value.trim();
   const note      = document.getElementById("fin-note").value.trim();
   if (!rawAmount || !desc) return;
-
-  const amount = _entrySign * Math.abs(rawAmount);
-  const sign   = amount >= 0 ? "+" : "";
-  const text   = `${sign}${amount} ${desc}${note ? ", " + note : ""}`;
 
   const btn = document.getElementById("submit-single");
   btn.textContent = "Salvataggio...";
   btn.disabled    = true;
 
   try {
-    await apiPost("finance_smart_entry", { text, wallet: _activeWallet });
-    btn.textContent = "✓ Salvato";
-    setTimeout(() => {
-      closeEntryModal();
-      btn.textContent = "Salva";
-      btn.disabled    = false;
-      loadData();
-    }, 700);
-  } catch(e) {
-    btn.textContent = "Errore — riprova";
-    btn.disabled    = false;
+    const res = await _post("finance_smart_entry", {
+      amount: _entrySign * Math.abs(rawAmount), desc, note, wallet: _activeWallet,
+    });
+    await _afterSave(btn, "Salva", res.status === "AI_PENDING");
+  } catch (e) {
+    _fail(btn, e);
   }
 }
 
@@ -106,60 +130,50 @@ async function submitMulti() {
   const rows    = document.querySelectorAll(".multi-row");
   const entries = [];
   rows.forEach(row => {
-    const signBtn = row.querySelector(".multi-row-sign");
-    const sign    = parseInt(signBtn.dataset.sign);
-    const amt     = parseFloat(row.querySelector(".multi-row-amount").value);
-    const desc    = row.querySelector(".multi-row-desc").value.trim();
-    const wallet  = row.querySelector(".multi-row-wallet").value;
-    if (amt && desc) entries.push({ amount: sign * Math.abs(amt), desc, wallet });
+    const sign   = parseInt(row.querySelector(".multi-row-sign").dataset.sign, 10);
+    const amt    = parseFloat(String(row.querySelector(".multi-row-amount").value).replace(",", "."));
+    const [desc, note] = _splitDescNote(row.querySelector(".multi-row-desc").value);
+    const wallet = row.querySelector(".multi-row-wallet").value;
+    if (amt && desc) entries.push({ row, amount: sign * Math.abs(amt), desc, note, wallet });
   });
   if (entries.length === 0) return;
 
   const btn = document.getElementById("submit-multi");
-  btn.textContent = "Salvataggio...";
-  btn.disabled    = true;
+  btn.disabled = true;
 
+  let pending = false;
   try {
-    for (const e of entries) {
-      const s = e.amount >= 0 ? "+" : "";
-      await apiPost("finance_smart_entry", { text: `${s}${e.amount} ${e.desc}`, wallet: e.wallet });
+    for (let i = 0; i < entries.length; i++) {
+      btn.textContent = `Salvataggio ${i + 1}/${entries.length}...`;
+      const { row, ...payload } = entries[i];
+      const res = await _post("finance_smart_entry", payload);
+      if (res.status === "AI_PENDING") pending = true;
+      row.remove(); // se una riga successiva fallisce, quelle già salvate non vengono ripetute
     }
-    btn.textContent = "✓ Salvato";
-    setTimeout(() => {
-      closeEntryModal();
-      btn.textContent = "Salva tutto";
-      btn.disabled    = false;
-      loadData();
-    }, 700);
-  } catch(e) {
-    btn.textContent = "Errore — riprova";
-    btn.disabled    = false;
+    await _afterSave(btn, "Salva tutto", pending);
+  } catch (e) {
+    _fail(btn, e);
+    if (!document.querySelector(".multi-row")) addMultiRow();
   }
 }
 
 // ---- Submit: transfer ----
 async function submitTransfer() {
-  const amount = parseFloat(document.getElementById("fin-transfer-amount").value);
+  const amount = parseFloat(String(document.getElementById("fin-transfer-amount").value).replace(",", "."));
   const from   = document.getElementById("fin-transfer-from").value;
   const to     = document.getElementById("fin-transfer-to").value;
-  if (!amount || from === to) return;
+  if (!amount || amount <= 0) return;
+  if (from === to) { showAnalyst("Scegli due conti diversi.", 2500); return; }
 
   const btn = document.getElementById("submit-transfer");
   btn.textContent = "Esecuzione...";
   btn.disabled    = true;
 
   try {
-    await apiPost("finance_transfer", { amount, from, to });
-    btn.textContent = "✓ Eseguito";
-    setTimeout(() => {
-      closeEntryModal();
-      btn.textContent = "Esegui trasferimento";
-      btn.disabled    = false;
-      loadData();
-    }, 700);
-  } catch(e) {
-    btn.textContent = "Errore — riprova";
-    btn.disabled    = false;
+    await _post("finance_transfer", { amount, from, to });
+    await _afterSave(btn, "Esegui trasferimento", false);
+  } catch (e) {
+    _fail(btn, e);
   }
 }
 

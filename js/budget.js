@@ -1,215 +1,39 @@
 /* ============================================
-   CASSA — Budget pane
+   TIDE — Budget pane
+   Niente AI: spendibile = entrate tipiche − obiettivo di risparmio.
+   La logica di calcolo è in data.js (computeBudget).
    ============================================ */
 
 let _budgetScope = "month";
-let _budgetData  = null;
 
-window._budgetMonths = null;
+const SAVINGS_OPTIONS = [0, 10, 15, 20, 25, 30, 40];
 
-// Categorie escluse dal budget (non sono spese reali)
-const BUDGET_EXCLUDE = new Set(["RIMBORSO", "TRASFERIMENTO", "SET_BALANCE", "ENTRATE"]);
-
-function loadBudget() {
-  apiGet("finance_get_budget").then(data => {
-    _budgetData = data;
-    window._budgetMonths = data.allMonths || null;
-    _renderBudget();
-  }).catch(e => console.error("loadBudget error:", e));
-}
-
-function _renderBudget() {
-  if (!_budgetData) return;
-  if (_budgetScope === "month") _renderMonthly();
-  else                          _renderYearly();
-}
-
-// ---- MENSILE ----
-function _renderMonthly() {
-  const data        = _budgetData;
-  const month       = data.currentMonth || {};
-  const spent       = parseFloat(month.spent) || 0;
-  const rawCats     = month.categories || {};
-  const budgetAI    = data.budgetTargets || {};
-  const totalTarget = data.monthlyTarget || 0;
-
-  // Escludi categorie non-spesa
-  const cats = {};
-  Object.entries(rawCats).forEach(([cat, amt]) => {
-    if (!BUDGET_EXCLUDE.has(cat)) cats[cat] = amt;
-  });
-
-  // Hero residuo
-  const remaining = totalTarget > 0 ? totalTarget - spent : 0;
-  const pct       = totalTarget > 0 ? Math.min(100, (spent / totalTarget) * 100) : 0;
-  const remainPct = 100 - pct; // barra piena che si svuota
-
-  const remainEl = document.getElementById("budget-remaining");
-  if (totalTarget > 0) {
-    remainEl.textContent = remaining.toFixed(2) + "€";
-    remainEl.className   = "budget-hero-num " + (pct < 60 ? "ok" : pct < 85 ? "warn" : "danger");
-  } else {
-    remainEl.textContent = "—";
-    remainEl.className   = "budget-hero-num ok";
-  }
-  document.getElementById("budget-total-monthly").textContent =
-    totalTarget > 0 ? totalTarget.toFixed(2) + "€" : "nessun target — premi Ricalcola";
-
-  // Barra hero: piena che si svuota (rimasto = 100 - pct_speso)
-  const heroBar = document.getElementById("budget-main-bar");
-  heroBar.style.width      = remainPct + "%";
-  heroBar.style.background = pct < 60 ? "#25B7BB" : pct < 85 ? "#f59e0b" : "#ef4444";
-
-  if (data.aiComment) {
-    document.getElementById("budget-ai-comment").textContent = data.aiComment;
-  }
-
-  // Categorie
-  const catList = document.getElementById("budget-categories-list");
-  const allCats = new Set([
-    ...Object.keys(cats),
-    ...Object.keys(budgetAI).filter(c => !BUDGET_EXCLUDE.has(c))
-  ]);
-  const rows = [];
-  allCats.forEach(cat => {
-    rows.push({ cat, spentAmt: parseFloat(cats[cat] || 0), target: parseFloat(budgetAI[cat] || 0) });
-  });
-  rows.sort((a, b) => (b.target || b.spentAmt) - (a.target || a.spentAmt));
-
-  if (rows.length === 0) {
-    catList.innerHTML = '<div class="empty-state">Nessuna spesa questo mese</div>';
-    if (lucide) lucide.createIcons({ nodes: [catList] });
-    return;
-  }
-  catList.innerHTML = rows.map(r => _catRow(r.cat, r.spentAmt, r.target)).join("");
-  if (lucide) lucide.createIcons({ nodes: [catList] });
-}
-
-// ---- ANNUALE ----
-function _renderYearly() {
-  const data        = _budgetData;
-  const allMonths   = data.allMonths || [];
-  const yearTargets = data.yearTargets || {};
-  const yearTotal   = data.yearlyTarget || 0;
-
-  // Somma spese anno per categoria (escludi non-spese)
-  const yearCats = {};
-  allMonths.forEach(m => {
-    Object.entries(m.categories || {}).forEach(([cat, amt]) => {
-      if (!BUDGET_EXCLUDE.has(cat)) yearCats[cat] = (yearCats[cat] || 0) + (amt || 0);
-    });
-  });
-  const totalYearSpent = Object.values(yearCats).reduce((a, b) => a + b, 0);
-
-  // Hero
-  const available = yearTotal > 0 ? yearTotal - totalYearSpent : 0;
-  const pct       = yearTotal > 0 ? Math.min(100, (totalYearSpent / yearTotal) * 100) : 0;
-  const remainPct = 100 - pct;
-
-  const availEl = document.getElementById("budget-year-available");
-  if (yearTotal > 0) {
-    availEl.textContent = available.toFixed(2) + "€";
-    availEl.className   = "budget-hero-num " + (pct < 60 ? "ok" : pct < 85 ? "warn" : "danger");
-  } else {
-    availEl.textContent = "—";
-    availEl.className   = "budget-hero-num ok";
-  }
-  document.getElementById("budget-year-total").textContent =
-    yearTotal > 0 ? yearTotal.toFixed(0) + "€" : "nessun target — premi Ricalcola";
-
-  const bar = document.getElementById("budget-year-bar");
-  bar.style.width      = yearTotal > 0 ? remainPct + "%" : "0%";
-  bar.style.background = pct < 60 ? "#25B7BB" : pct < 85 ? "#f59e0b" : "#ef4444";
-
-  if (data.aiCommentYear) {
-    document.getElementById("budget-ai-year-comment").textContent = data.aiCommentYear;
-  }
-
-  const catList = document.getElementById("budget-year-cats-list");
-  const allCats = new Set([
-    ...Object.keys(yearCats),
-    ...Object.keys(yearTargets).filter(c => !BUDGET_EXCLUDE.has(c))
-  ]);
-  const rows = [];
-  allCats.forEach(cat => {
-    rows.push({ cat, spentAmt: parseFloat(yearCats[cat] || 0), target: parseFloat(yearTargets[cat] || 0) });
-  });
-  rows.sort((a, b) => (b.target || b.spentAmt) - (a.target || a.spentAmt));
-
-  if (rows.length === 0) {
-    catList.innerHTML = '<div class="empty-state">Nessun dato</div>';
-    if (lucide) lucide.createIcons({ nodes: [catList] });
-    return;
-  }
-  catList.innerHTML = rows.map(r => _catRow(r.cat, r.spentAmt, r.target)).join("");
-  if (lucide) lucide.createIcons({ nodes: [catList] });
-}
-
-// ---- Riga categoria: barra piena che si svuota ----
-function _catRow(cat, spentAmt, target) {
-  const hasTarget = target > 0;
-  // pctSpent = quanto della barra è stata consumata
-  const pctSpent  = hasTarget ? Math.min(100, (spentAmt / target) * 100) : 0;
-  // La barra mostra il RIMASTO (piena = 100%, si svuota da destra)
-  const pctRemain = Math.max(0, 100 - pctSpent);
-
-  const color = !hasTarget
-    ? catColor(cat)
-    : pctSpent < 70  ? "#25B7BB"
-    : pctSpent < 90  ? "#f59e0b"
-    : "#ef4444";
-
-  const remainAmt = hasTarget ? target - spentAmt : null;
-  const remainTxt = remainAmt === null ? ""
-    : remainAmt >= 0
-      ? `rimasti ${remainAmt.toFixed(0)}€`
-      : `sforato di ${Math.abs(remainAmt).toFixed(0)}€`;
-
-  return `
-    <div class="budget-cat-row">
-      <div class="budget-cat-icon"><i data-lucide="${catIcon(cat)}"></i></div>
-      <div class="budget-cat-body">
-        <div class="budget-cat-name">${escapeHtml(cat)}</div>
-        <div class="budget-cat-bar-track">
-          <div class="budget-cat-bar-fill" style="width:${hasTarget ? pctRemain : 0}%;background:${color}"></div>
-        </div>
-        ${hasTarget ? `<div class="budget-cat-remain${remainAmt < 0 ? " over" : ""}">${remainTxt}</div>` : ""}
-      </div>
-      <span class="budget-cat-amount">${spentAmt.toFixed(2)}€${hasTarget ? `<span class="budget-cat-target"> / ${target.toFixed(0)}€</span>` : ""}</span>
-    </div>`;
-}
-
-// ---- Scope toggle + AI buttons ----
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("scope-month").addEventListener("click", () => _setScope("month"));
   document.getElementById("scope-year").addEventListener("click",  () => _setScope("year"));
 
-  document.getElementById("btn-budget-ai").addEventListener("click", async e => {
-    await _runBudgetAI(e.currentTarget, "month", "budget-ai-comment");
+  const chips = document.getElementById("savings-chips");
+  chips.innerHTML = SAVINGS_OPTIONS.map(p =>
+    `<button class="savings-chip" data-pct="${p}">${p}%</button>`).join("");
+  chips.addEventListener("click", e => {
+    const btn = e.target.closest(".savings-chip");
+    if (!btn) return;
+    saveBudgetSettings({ savingsPct: parseInt(btn.dataset.pct, 10) });
+    renderAll();
   });
 
-  document.getElementById("btn-budget-ai-year").addEventListener("click", async e => {
-    await _runBudgetAI(e.currentTarget, "year", "budget-ai-year-comment");
+  const incomeInput = document.getElementById("budget-income-input");
+  incomeInput.addEventListener("change", () => {
+    const v = parseFloat(String(incomeInput.value).replace(",", "."));
+    saveBudgetSettings({ income: v > 0 ? v : 0 });
+    renderAll();
+  });
+  document.getElementById("budget-income-auto").addEventListener("click", () => {
+    incomeInput.value = "";
+    saveBudgetSettings({ income: 0 });
+    renderAll();
   });
 });
-
-async function _runBudgetAI(btn, type, commentId) {
-  btn.disabled = true;
-  const orig = btn.innerHTML;
-  btn.innerHTML = '<i data-lucide="loader"></i>';
-  if (lucide) lucide.createIcons({ nodes: [btn] });
-  try {
-    const text = await apiPostText("finance_budget_ai", { type });
-    document.getElementById(commentId).textContent = text || "Analisi completata.";
-    const data = await apiGet("finance_get_budget");
-    _budgetData = data;
-    window._budgetMonths = data.allMonths || null;
-    _renderBudget();
-  } catch(err) { console.error(err); }
-  btn.innerHTML = orig;
-  if (lucide) lucide.createIcons({ nodes: [btn] });
-  btn.disabled = false;
-}
 
 function _setScope(scope) {
   _budgetScope = scope;
@@ -217,5 +41,258 @@ function _setScope(scope) {
   document.getElementById("scope-year").classList.toggle("active",  scope === "year");
   document.getElementById("budget-monthly-view").classList.toggle("hidden", scope !== "month");
   document.getElementById("budget-yearly-view").classList.toggle("hidden",  scope !== "year");
-  if (_budgetData) _renderBudget();
+  renderBudget();
+}
+
+function renderBudget() {
+  if (!_dataReady) return;
+  const b = computeBudget();
+  _renderSettings(b);
+  if (_budgetScope === "month") _renderMonthly(b);
+  else                          _renderYearly(b);
+  refreshIcons();
+}
+
+function _heroClass(spent, expected, limit) {
+  if (spent > limit)            return "danger";
+  if (spent > expected * 1.1)   return "warn";
+  return "ok";
+}
+const HERO_COLORS = { ok: "#25B7BB", warn: "#f59e0b", danger: "#ef4444" };
+
+// ---- MENSILE ----
+function _renderMonthly(b) {
+  const ym      = currentYM();
+  const s       = monthStats(ym);
+  const day     = new Date().getDate();
+  const dim     = daysInMonth(ym);
+  const left    = dim - day + 1;
+  // Ritmo atteso basato su come spendi di solito (affitto a inizio mese ecc.)
+  const paceFrac = typicalMonthShare(day);
+
+  const numEl  = document.getElementById("budget-remaining");
+  const subEl  = document.getElementById("budget-hero-sub");
+  const footEl = document.getElementById("budget-hero-foot");
+  const bar    = document.getElementById("budget-main-bar");
+  const pace   = document.getElementById("budget-main-pace");
+
+  if (b.spendable <= 0) {
+    numEl.textContent = "—";
+    numEl.className   = "budget-hero-num ok";
+    subEl.textContent = "Nessuna entrata negli ultimi mesi: impostale qui sotto";
+    footEl.textContent = `Speso finora: ${fmtEur(s.spent, 0)}`;
+    bar.style.width = "0%";
+    pace.classList.add("hidden");
+  } else {
+    const remaining = b.spendable - s.spent;
+    const cls = _heroClass(s.spent, b.spendable * paceFrac, b.spendable);
+    numEl.textContent = fmtEur(remaining, 0);
+    numEl.className   = "budget-hero-num " + cls;
+    subEl.textContent = `su ${fmtEur(b.spendable, 0)} spendibili a ${MONTH_NAMES[new Date().getMonth()].toLowerCase()} · spesi ${fmtEur(s.spent, 0)}`;
+    footEl.textContent = remaining > 0
+      ? `≈ ${fmtEur(remaining / left, 0)} al giorno per ${left === 1 ? "oggi" : `i prossimi ${left} giorni`}`
+      : `Budget del mese superato di ${fmtEur(-remaining, 0)}`;
+    bar.style.width      = Math.max(0, Math.min(100, remaining / b.spendable * 100)) + "%";
+    bar.style.background = HERO_COLORS[cls];
+    // Tacca: dove "dovrebbe" essere il residuo oggi se spendessi in modo uniforme
+    pace.classList.remove("hidden");
+    pace.style.left = ((1 - paceFrac) * 100).toFixed(1) + "%";
+  }
+
+  // Categorie: target da storico + spesa del mese
+  const rows = _catRows(b.targets, s.cats, 1);
+  _renderCatList("budget-categories-list", rows, null);
+
+  const notes = [];
+  if (b.essentialsOver) {
+    notes.push(`Le sole spese essenziali (${fmtEur(b.essentials, 0)}) superano lo spendibile: abbassa l'obiettivo di risparmio o rivedi le entrate.`);
+  } else if (b.factor < 1) {
+    notes.push(`Per risparmiare il ${b.savingsPct}%, le spese variabili sono ridotte al ${fmtPct(b.factor * 100)} della tua media. Casa, spesa, salute e trasporti restano intere.`);
+  }
+  if (b.margin >= 5) notes.push(`Margine libero non assegnato a nessuna categoria: ${fmtEur(b.margin, 0)}.`);
+  document.getElementById("budget-cats-note").innerHTML = notes.map(n => `<p>${n}</p>`).join("");
+
+  // Sintesi
+  const lines = [];
+  if (!b.hasHistory) {
+    lines.push("Serve almeno un mese completo di dati per calcolare medie e target per categoria.");
+  } else {
+    lines.push(`Negli ultimi ${b.histMonths} mesi hai speso in media <b>${fmtEur(b.typical, 0)}</b> al mese` +
+      (b.income > 0 ? ` su ${fmtEur(b.income, 0)} di entrate.` : "."));
+    if (b.spendable > 0) {
+      const gap = b.typical - b.spendable;
+      lines.push(gap > 0
+        ? `Per mettere da parte il ${b.savingsPct}% (${fmtEur(b.savings, 0)}) devi spendere circa <b>${fmtEur(gap, 0)} in meno</b> al mese rispetto alle tue abitudini.`
+        : `Le tue abitudini sono compatibili con un risparmio del ${b.savingsPct}%: ti avanzano circa ${fmtEur(-gap, 0)} in più al mese.`);
+    }
+  }
+  if (day >= 3 && day < dim && b.spendable > 0) {
+    const proj = projectCurrentMonth();
+    lines.push(`Al ritmo attuale chiuderai il mese a circa <b>${fmtEur(proj, 0)}</b>` +
+      (proj > b.spendable ? `, ${fmtEur(proj - b.spendable, 0)} oltre il budget.` : ", dentro il budget."));
+  }
+  const over = rows.filter(r => r.target > 0 && r.spent > r.target);
+  if (over.length) {
+    lines.push("Categorie già sforate: " + over.map(r =>
+      `<b>${escapeHtml(catLabel(r.cat))}</b> (+${fmtEur(r.spent - r.target, 0)})`).join(", ") + ".");
+  }
+  document.getElementById("budget-summary").innerHTML = lines.map(l => `<p>${l}</p>`).join("");
+}
+
+// ---- ANNUALE ----
+function _renderYearly(b) {
+  const now    = new Date();
+  const y      = now.getFullYear();
+  const curIdx = now.getMonth();
+  const ym     = currentYM();
+  const day    = now.getDate();
+  const dim    = daysInMonth(ym);
+  const ys     = yearStats(y);
+  const first  = firstDataYM();
+
+  // Se i dati partono a metà anno, il budget copre solo i mesi da lì in poi
+  const startIdx = first && first.startsWith(String(y)) ? parseInt(first.slice(5), 10) - 1 : 0;
+  const totalMonths = 12 - startIdx;
+  const elapsed     = Math.max(0.03, (curIdx - startIdx) + day / dim);
+  const elapsedFrac = elapsed / totalMonths;
+
+  // Entrate previste: mesi passati reali, mese corrente almeno quanto il tipico, futuri al tipico
+  let expIncome = 0;
+  for (let m = startIdx; m < 12; m++) {
+    const mym = `${y}-${String(m + 1).padStart(2, "0")}`;
+    const real = monthStats(mym).income;
+    if (m < curIdx)       expIncome += real;
+    else if (m === curIdx) expIncome += Math.max(real, b.income);
+    else                  expIncome += b.income;
+  }
+  const savingsTarget = expIncome * b.savingsPct / 100;
+  const spendableYear = Math.max(0, expIncome - savingsTarget);
+  const remaining     = spendableYear - ys.spent;
+  const monthsLeft    = Math.max(0.5, totalMonths - elapsed);
+
+  document.getElementById("budget-year-label").textContent = `Spendibile ${y}`;
+  const numEl = document.getElementById("budget-year-available");
+  const bar   = document.getElementById("budget-year-bar");
+  const pace  = document.getElementById("budget-year-pace");
+
+  if (spendableYear <= 0) {
+    numEl.textContent = "—";
+    numEl.className   = "budget-hero-num ok";
+    document.getElementById("budget-year-sub").textContent = "Nessuna entrata prevista: impostale qui sotto";
+    document.getElementById("budget-year-foot").textContent = `Speso nel ${y}: ${fmtEur(ys.spent, 0)}`;
+    bar.style.width = "0%";
+    pace.classList.add("hidden");
+  } else {
+    const cls = _heroClass(ys.spent, spendableYear * elapsedFrac, spendableYear);
+    numEl.textContent = fmtEur(remaining, 0);
+    numEl.className   = "budget-hero-num " + cls;
+    document.getElementById("budget-year-sub").textContent =
+      `su ${fmtEur(spendableYear, 0)}: entrate previste ${fmtEur(expIncome, 0)} − risparmio ${b.savingsPct}%`;
+    document.getElementById("budget-year-foot").textContent = remaining > 0
+      ? `≈ ${fmtEur(remaining / monthsLeft, 0)} al mese per il resto dell'anno`
+      : `Budget annuale superato di ${fmtEur(-remaining, 0)}`;
+    bar.style.width      = Math.max(0, Math.min(100, remaining / spendableYear * 100)) + "%";
+    bar.style.background = HERO_COLORS[cls];
+    pace.classList.remove("hidden");
+    pace.style.left = ((1 - elapsedFrac) * 100).toFixed(1) + "%";
+  }
+
+  const rows = _catRows(b.targets, ys.cats, totalMonths);
+  rows.forEach(r => { r.proj = elapsed >= 1 ? r.spent / elapsed * totalMonths : null; });
+  _renderCatList("budget-year-cats-list", rows, elapsedFrac);
+
+  // Sintesi
+  const lines = [];
+  if (elapsed >= 1) {
+    const proj = ys.spent / elapsed * totalMonths;
+    const projSave = expIncome - proj;
+    lines.push(`Al ritmo attuale nel ${y} spenderai circa <b>${fmtEur(proj, 0)}</b>.`);
+    if (expIncome > 0) {
+      lines.push(`Risparmio previsto a fine anno: <b>${fmtEur(projSave, 0)}</b> (${fmtPct(projSave / expIncome * 100)}), obiettivo ${b.savingsPct}% = ${fmtEur(savingsTarget, 0)}.`);
+    }
+  }
+  if (ys.income > 0) {
+    lines.push(`Finora: entrate ${fmtEur(ys.income, 0)}, spese ${fmtEur(ys.spent, 0)}, messo da parte ${fmtSigned(ys.net, 0)}.`);
+  }
+  const ahead = rows
+    .filter(r => r.target > 0 && r.spent > r.target * elapsedFrac * 1.1)
+    .sort((a, b2) => (b2.spent - b2.target * elapsedFrac) - (a.spent - a.target * elapsedFrac))
+    .slice(0, 3);
+  if (ahead.length) {
+    lines.push("Sopra il ritmo previsto: " + ahead.map(r =>
+      `<b>${escapeHtml(catLabel(r.cat))}</b> (+${fmtEur(r.spent - r.target * elapsedFrac, 0)})`).join(", ") + ".");
+  }
+  if (!lines.length) lines.push("Dati insufficienti per una proiezione annuale.");
+  document.getElementById("budget-year-summary").innerHTML = lines.map(l => `<p>${l}</p>`).join("");
+}
+
+// ---- Impostazioni / spiegazione del calcolo ----
+function _renderSettings(b) {
+  document.querySelectorAll(".savings-chip").forEach(c =>
+    c.classList.toggle("active", parseInt(c.dataset.pct, 10) === b.savingsPct));
+
+  const input = document.getElementById("budget-income-input");
+  if (document.activeElement !== input) input.value = b.manual ? String(b.income) : "";
+  input.placeholder = b.autoIncome > 0 ? `auto: ${fmtEur(b.autoIncome, 0)}` : "es. 1300";
+  document.getElementById("budget-income-auto").classList.toggle("hidden", !b.manual);
+  document.getElementById("budget-income-hint").textContent = b.manual
+    ? "Valore impostato a mano. Premi Auto per tornare al calcolo dallo storico."
+    : `Mediana delle entrate degli ultimi ${b.histMonths || 0} mesi completi (ignora bonus una tantum).`;
+
+  document.getElementById("budget-calc").innerHTML = `
+    <div class="budget-calc-row"><span>Entrate tipiche</span><span>${fmtEur(b.income, 0)}</span></div>
+    <div class="budget-calc-row minus"><span>Risparmio ${b.savingsPct}%</span><span>−${fmtEur(b.savings, 0)}</span></div>
+    <div class="budget-calc-row total"><span>Spendibile al mese</span><span>${fmtEur(b.spendable, 0)}</span></div>`;
+}
+
+// ---- Righe categoria ----
+// targets mensili × months = target del periodo
+function _catRows(targets, spentCats, months) {
+  const cats = new Set([...Object.keys(targets), ...Object.keys(spentCats)]);
+  const rows = [];
+  cats.forEach(cat => {
+    rows.push({ cat, spent: spentCats[cat] || 0, target: (targets[cat] || 0) * months });
+  });
+  return rows.sort((a, b) => (b.target - a.target) || (b.spent - a.spent));
+}
+
+function _renderCatList(id, rows, paceFrac) {
+  const el = document.getElementById(id);
+  el.innerHTML = rows.length
+    ? rows.map(r => _catRow(r, paceFrac)).join("")
+    : '<div class="empty-state">Nessuna spesa</div>';
+}
+
+// Barra piena che si svuota man mano che spendi
+function _catRow(r, paceFrac) {
+  const hasTarget = r.target > 0;
+  const usedPct   = hasTarget ? r.spent / r.target * 100 : 0;
+  const color     = !hasTarget ? catColor(r.cat)
+                  : usedPct < 80  ? "#25B7BB"
+                  : usedPct < 100 ? "#f59e0b"
+                  : "#ef4444";
+  const remain = r.target - r.spent;
+
+  let info;
+  if (!hasTarget) info = "non prevista negli ultimi 6 mesi";
+  else if (remain >= 0) info = `rimasti ${fmtEur(remain, 0)}`;
+  else info = `sforato di ${fmtEur(-remain, 0)}`;
+  if (r.proj != null && hasTarget) info += ` · previsione ${fmtEur(r.proj, 0)}`;
+
+  const tick = paceFrac != null && hasTarget
+    ? `<span class="budget-cat-pace" style="left:${((1 - paceFrac) * 100).toFixed(1)}%"></span>` : "";
+
+  return `
+    <div class="budget-cat-row">
+      <div class="budget-cat-icon"><i data-lucide="${catIcon(r.cat)}"></i></div>
+      <div class="budget-cat-body">
+        <div class="budget-cat-name">${escapeHtml(catLabel(r.cat))}</div>
+        <div class="budget-cat-bar-track">
+          <div class="budget-cat-bar-fill" style="width:${hasTarget ? Math.max(0, 100 - usedPct) : 0}%;background:${color}"></div>
+          ${tick}
+        </div>
+        <div class="budget-cat-remain${hasTarget && remain < 0 ? " over" : ""}">${info}</div>
+      </div>
+      <span class="budget-cat-amount">${fmtEur(r.spent, 0)}${hasTarget ? `<span class="budget-cat-target"> / ${fmtEur(r.target, 0)}</span>` : ""}</span>
+    </div>`;
 }

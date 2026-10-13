@@ -17,16 +17,6 @@ async function _parse(res) {
   }
 }
 
-async function apiGet(action, params) {
-  // GAS redirige le GET cross-origin bloccando il CORS — usiamo POST anche per le letture
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(Object.assign({ action }, params || {})),
-  });
-  return _parse(res);
-}
-
 async function apiPost(action, payload) {
   // text/plain evita il preflight CORS con GAS
   const res = await fetch(GAS_URL, {
@@ -35,13 +25,4 @@ async function apiPost(action, payload) {
     body: JSON.stringify(Object.assign({ action }, payload || {})),
   });
   return _parse(res);
-}
-
-async function apiPostText(action, payload) {
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(Object.assign({ action }, payload || {})),
-  });
-  return res.text();
 }

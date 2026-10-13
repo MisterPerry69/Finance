@@ -1,194 +1,365 @@
 /* ============================================
-   CASSA — Stats pane rendering
+   TIDE — Logbook (stats pane): vista Mese / Anno
+   Tutto calcolato dalla cache locale: cambiare periodo è istantaneo.
    ============================================ */
 
-let _statsCurrentYM = "";
-
-const STATS_MONTH_NAMES = [
-  "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
-  "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"
-];
+let _statsMode = "month";   // "month" | "year"
+let _statsYM   = "";
+let _statsYear = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const now = new Date();
-  _statsCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  _statsYM   = currentYM();
+  _statsYear = new Date().getFullYear();
 
-  document.getElementById("stats-month-prev").addEventListener("click", () => _stepStatsMonth(-1));
-  document.getElementById("stats-month-next").addEventListener("click", () => _stepStatsMonth(+1));
+  document.getElementById("stats-mode-month").addEventListener("click", () => _setStatsMode("month"));
+  document.getElementById("stats-mode-year").addEventListener("click",  () => _setStatsMode("year"));
+  document.getElementById("stats-month-prev").addEventListener("click", () => _stepStats(-1));
+  document.getElementById("stats-month-next").addEventListener("click", () => _stepStats(+1));
+
+  // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
+  document.getElementById("pane-stats").addEventListener("click", e => {
+    const target = e.target.closest("[data-ym]");
+    if (!target || target.disabled) return;
+    _statsMode = "month";
+    _statsYM   = target.dataset.ym;
+    _statsYear = parseInt(_statsYM.slice(0, 4), 10);
+    renderStats();
+  });
 });
 
-function _stepStatsMonth(delta) {
-  const [y, m] = _statsCurrentYM.split("-").map(Number);
-  const d = new Date(y, m - 1 + delta, 1);
-  _statsCurrentYM = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-  _updateStatsMonthLabel();
-  _loadStatsForMonth(_statsCurrentYM);
+function _setStatsMode(mode) {
+  _statsMode = mode;
+  if (mode === "year") _statsYear = parseInt(_statsYM.slice(0, 4), 10);
+  renderStats();
 }
 
-function _updateStatsMonthLabel() {
-  const [y, m] = _statsCurrentYM.split("-").map(Number);
-  const label = `${STATS_MONTH_NAMES[m-1]} ${y}`;
-  document.getElementById("stats-month-label").textContent = label;
-  const now = new Date();
-  const curYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  const sub = document.getElementById("stat-month-sub");
-  if (sub) sub.textContent = _statsCurrentYM === curYM ? "questo mese" : label;
-}
-
-async function _loadStatsForMonth(ym) {
-  try {
-    const data = await apiGet("finance_filter_month", { ym });
-    if (!data) return;
-    let spent = 0, income = 0;
-    const cats = {};
-    (data || []).forEach(t => {
-      const amt = parseFloat(t.amt) || 0;
-      const cat = String(t.cat || "ALTRO").toUpperCase();
-      if (cat === "SET_BALANCE" || cat === "TRASFERIMENTO") return;
-      if (amt > 0 && cat !== "RIMBORSO") income += amt;
-      else if (amt < 0) {
-        spent += Math.abs(amt);
-        cats[cat] = (cats[cat] || 0) + Math.abs(amt);
-      }
-    });
-    _renderStatsMonth({ spent, income, categories: cats });
-    _renderStatsAnnual(); // update highlighted row
-  } catch(e) {
-    // silently ignore
-  }
-}
-
-function renderStats(data) {
-  if (!data || !data.currentMonth) return;
-
-  // Init month label + YM if not set
-  const now = new Date();
-  if (!_statsCurrentYM) {
-    _statsCurrentYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-  }
-  _updateStatsMonthLabel();
-
-  const month    = data.currentMonth;
-  const balances = data.balances;
-  const total    = parseFloat(balances?.total) || 0;
-
-  _renderStatsMonth(month, total);
-  _renderTrendBars(month);
-  _renderGas(month);
-  _renderStatsAnnual();
-}
-
-function _renderStatsMonth(month, totalOverride) {
-  const income = parseFloat(month.income) || 0;
-  const spent  = parseFloat(month.spent)  || 0;
-  const total  = totalOverride != null ? totalOverride : (parseFloat(_cachedData?.balances?.total) || 0);
-
-  // KPI cards
-  document.getElementById("stat-total-spent").textContent  = spent.toFixed(2)  + "€";
-  document.getElementById("stat-total-income").textContent = income.toFixed(2) + "€";
-
-  // Survival (based on current total balance, not per-month)
-  const survivalMonths = spent > 0 ? total / spent : Infinity;
-  const survivalPct    = spent > 0 ? Math.min(100, (survivalMonths / 12) * 100) : 100;
-  document.getElementById("survival-percentage").textContent = isFinite(survivalMonths)
-    ? survivalMonths.toFixed(1) + " mesi"
-    : "∞";
-  document.getElementById("survival-bar-fill").style.width = survivalPct + "%";
-
-  // Top categories
-  const cats   = month.categories || {};
-  const sorted = Object.entries(cats)
-    .filter(([, v]) => v > 0)
-    .sort((a, b) => b[1] - a[1]);
-
-  const maxAmt  = sorted.length > 0 ? sorted[0][1] : 1;
-  const topList = document.getElementById("top-expenses-list");
-
-  if (sorted.length === 0) {
-    topList.innerHTML = '<div class="empty-state">Nessuna spesa questo mese</div>';
+function _stepStats(delta) {
+  if (_statsMode === "month") {
+    const next = addMonths(_statsYM, delta);
+    if (next > currentYM()) return;
+    _statsYM = next;
+    _statsYear = parseInt(next.slice(0, 4), 10);
   } else {
-    topList.innerHTML = sorted.slice(0, 5).map(([cat, amt]) => {
-      const pct   = ((amt / maxAmt) * 100).toFixed(0);
-      const color = catColor(cat);
-      return `
-        <div class="cat-breakdown-row">
-          <div class="cat-dot" style="background:${color}"></div>
-          <span class="cat-breakdown-name">${escapeHtml(cat)}</span>
-          <div class="cat-breakdown-bar-wrap">
-            <div class="cat-breakdown-bar" style="width:${pct}%;background:${color}"></div>
-          </div>
-          <span class="cat-breakdown-amount">${parseFloat(amt).toFixed(2)}€</span>
-        </div>`;
-    }).join("");
+    const next = _statsYear + delta;
+    if (next > new Date().getFullYear()) return;
+    _statsYear = next;
+    // il mese selezionato segue l'anno (stesso mese, senza andare nel futuro)
+    const ym = `${next}-${_statsYM.slice(5, 7)}`;
+    _statsYM = ym > currentYM() ? currentYM() : ym;
+  }
+  renderStats();
+}
+
+function renderStats() {
+  if (!_dataReady) return;
+  _updateStatsNav();
+  if (_statsMode === "month") _renderStatsMonth();
+  else                        _renderStatsYear();
+  _renderAutonomy();
+  refreshIcons();
+}
+
+function _updateStatsNav() {
+  const isMonth = _statsMode === "month";
+  document.getElementById("stats-mode-month").classList.toggle("active", isMonth);
+  document.getElementById("stats-mode-year").classList.toggle("active", !isMonth);
+  document.getElementById("stats-month-label").textContent = isMonth ? ymLabel(_statsYM) : String(_statsYear);
+
+  const first = firstDataYM();
+  const prevBtn = document.getElementById("stats-month-prev");
+  const nextBtn = document.getElementById("stats-month-next");
+  if (isMonth) {
+    prevBtn.disabled = !first || _statsYM <= first;
+    nextBtn.disabled = _statsYM >= currentYM();
+  } else {
+    prevBtn.disabled = !first || _statsYear <= parseInt(first.slice(0, 4), 10);
+    nextBtn.disabled = _statsYear >= new Date().getFullYear();
   }
 }
 
-function _renderTrendBars(currentMonth) {
-  const container = document.getElementById("trend-bars");
-  if (!container) return;
+// Mesi con dati prima di ym (al massimo n)
+function _prevMonths(ym, n) {
+  const first = firstDataYM();
+  const out = [];
+  let cur = addMonths(ym, -1);
+  while (out.length < n && first && cur >= first) { out.push(cur); cur = addMonths(cur, -1); }
+  return out;
+}
 
-  const allMonths = window._budgetMonths;
-  if (!allMonths || allMonths.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="padding:var(--sp-3)">Dati non ancora disponibili</div>';
+// ---- MESE ----
+function _renderStatsMonth() {
+  const ym    = _statsYM;
+  const s     = monthStats(ym);
+  const isCur = ym === currentYM();
+  const day   = new Date().getDate();
+  const prev  = _prevMonths(ym, 3);
+  const prevAvg = prev.length ? prev.reduce((a, p) => a + monthStats(p).spent, 0) / prev.length : 0;
+  const proj  = isCur && day >= 3 ? projectCurrentMonth() : null;
+
+  let spentSub = "";
+  if (isCur) spentSub = proj !== null ? `proiezione ${fmtEur(proj, 0)}` : "mese in corso";
+  else if (prevAvg > 0) {
+    const d = (s.spent - prevAvg) / prevAvg * 100;
+    spentSub = `${d >= 0 ? "+" : "−"}${fmtPct(Math.abs(d))} vs media 3 mesi`;
+  }
+  _renderKpis(s, spentSub, `${s.count} movimenti`);
+
+  // Andamento: 12 mesi che terminano col mese selezionato
+  const items = [];
+  for (let i = 11; i >= 0; i--) {
+    const k = addMonths(ym, -i);
+    items.push(_trendItem(k, MONTH_SHORT[parseInt(k.slice(5, 7), 10) - 1]));
+  }
+  _renderTrend(items, ym);
+
+  document.getElementById("cats-heading").textContent = "Per categoria";
+  _renderCats(s.cats, s.spent, 0);
+  document.getElementById("stats-annual-card").classList.add("hidden");
+  _renderGas(s);
+
+  // Sintesi
+  const lines = [];
+  if (!s.count) {
+    lines.push("Nessun movimento registrato in questo mese.");
+  } else {
+    if (isCur && proj !== null) {
+      lines.push(`Al ritmo attuale chiuderai il mese a circa <b>${fmtEur(proj, 0)}</b> di spese` +
+        (prevAvg > 0 ? ` (media dei mesi precedenti: ${fmtEur(prevAvg, 0)}).` : "."));
+    } else if (!isCur && prevAvg > 0) {
+      const d = (s.spent - prevAvg) / prevAvg * 100;
+      lines.push(`Hai speso <b>${fmtEur(s.spent, 0)}</b>, il ${fmtPct(Math.abs(d))} ${d >= 0 ? "in più" : "in meno"} della media dei 3 mesi precedenti (${fmtEur(prevAvg, 0)}).`);
+    }
+    if (!isCur && prev.length) {
+      let worst = null;
+      Object.entries(s.cats).forEach(([c, v]) => {
+        const avg = prev.reduce((a, p) => a + (monthStats(p).cats[c] || 0), 0) / prev.length;
+        const delta = v - avg;
+        if (delta > 20 && (!worst || delta > worst.delta)) worst = { c, delta };
+      });
+      if (worst) lines.push(`La voce cresciuta di più è <b>${escapeHtml(catLabel(worst.c))}</b>: +${fmtEur(worst.delta, 0)} rispetto al solito.`);
+    }
+    if (s.income > 0) {
+      const rate = s.net / s.income * 100;
+      lines.push(rate >= 0
+        ? `Hai messo da parte il <b>${fmtPct(rate)}</b> delle entrate (${fmtEur(s.net, 0)}).`
+        : `Hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato.`);
+    } else {
+      lines.push("Nessuna entrata registrata in questo mese.");
+    }
+    const pending = _tx.filter(t => t.ym === ym && t.cat === "AI_PENDING").length;
+    if (pending) lines.push(`${pending} moviment${pending === 1 ? "o" : "i"} da categorizzare.`);
+  }
+  _renderInsight(lines);
+}
+
+// ---- ANNO ----
+function _renderStatsYear() {
+  const y     = _statsYear;
+  const s     = yearStats(y);
+  const curYM = currentYM();
+  const first = firstDataYM();
+
+  // Mesi dell'anno che contano: da quando ci sono dati fino ad oggi
+  const months = [];
+  for (let m = 1; m <= 12; m++) {
+    const ym = `${y}-${String(m).padStart(2, "0")}`;
+    if (ym > curYM || !first || ym < first) continue;
+    months.push(ym);
+  }
+  // Il mese in corso conta solo per la parte trascorsa, così la media non si abbassa
+  const n = Math.max(1, months.length - (months.includes(curYM)
+    ? 1 - new Date().getDate() / daysInMonth(curYM) : 0));
+
+  _renderKpis(s, `media ${fmtEur(s.spent / n, 0)}/mese`, `media ${fmtEur(s.income / n, 0)}/mese`);
+
+  const items = [];
+  for (let m = 1; m <= 12; m++) {
+    const ym = `${y}-${String(m).padStart(2, "0")}`;
+    items.push(_trendItem(ym, MONTH_SHORT[m - 1]));
+  }
+  _renderTrend(items, ym => ym === curYM);
+
+  document.getElementById("cats-heading").textContent = `Per categoria · ${y}`;
+  _renderCats(s.cats, s.spent, n);
+  _renderMonthList(months);
+  _renderGas(s);
+
+  // Sintesi
+  const lines = [];
+  if (!s.count) {
+    lines.push(`Nessun movimento registrato nel ${y}.`);
+  } else {
+    lines.push(`Spesa media <b>${fmtEur(s.spent / n, 0)}</b> al mese (${months.length} mes${months.length === 1 ? "e" : "i"} con dati).`);
+
+    const full = months.filter(ym => ym !== curYM && monthStats(ym).count > 0);
+    if (full.length >= 2) {
+      const sorted = [...full].sort((a, b) => monthStats(b).spent - monthStats(a).spent);
+      const hi = sorted[0], lo = sorted[sorted.length - 1];
+      lines.push(`Mese più caro: <b>${ymLabel(hi).split(" ")[0]}</b> (${fmtEur(monthStats(hi).spent, 0)}), più leggero: ${ymLabel(lo).split(" ")[0]} (${fmtEur(monthStats(lo).spent, 0)}).`);
+    }
+
+    if (s.income > 0) {
+      const rate = s.net / s.income * 100;
+      lines.push(rate >= 0
+        ? `Tasso di risparmio dell'anno: <b>${fmtPct(rate)}</b> (${fmtEur(s.net, 0)}).`
+        : `Nell'anno hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato.`);
+    }
+
+    // Confronto con gli stessi mesi dell'anno prima
+    const prevSame = months.map(ym => `${y - 1}-${ym.slice(5)}`).filter(ym => first && ym >= first);
+    if (prevSame.length === months.length && prevSame.length > 0) {
+      const prevSpent = prevSame.reduce((a, ym) => a + monthStats(ym).spent, 0);
+      if (prevSpent > 0) {
+        const d = (s.spent - prevSpent) / prevSpent * 100;
+        lines.push(`Rispetto agli stessi mesi del ${y - 1} spendi il ${fmtPct(Math.abs(d))} ${d >= 0 ? "in più" : "in meno"}.`);
+      }
+    }
+
+    const top = Object.entries(s.cats).sort((a, b) => b[1] - a[1])[0];
+    if (top && s.spent > 0) {
+      lines.push(`La voce principale è <b>${escapeHtml(catLabel(top[0]))}</b>, il ${fmtPct(top[1] / s.spent * 100)} delle spese.`);
+    }
+  }
+  _renderInsight(lines);
+}
+
+// ---- Blocchi condivisi ----
+function _renderKpis(s, spentSub, incomeSub) {
+  document.getElementById("stat-total-spent").textContent  = fmtEur(s.spent);
+  document.getElementById("stat-total-income").textContent = fmtEur(s.income);
+  document.getElementById("stat-spent-sub").textContent    = spentSub || "";
+  document.getElementById("stat-income-sub").textContent   = incomeSub || "";
+
+  const netEl = document.getElementById("stat-net");
+  netEl.textContent = fmtSigned(s.net);
+  netEl.className   = "kpi-value " + (s.net >= 0 ? "pos" : "neg");
+  document.getElementById("stat-net-sub").textContent = s.income > 0
+    ? `${fmtPct(Math.max(0, s.net) / s.income * 100)} delle entrate messo da parte`
+    : "nessuna entrata nel periodo";
+}
+
+function _trendItem(ym, label) {
+  const ms = monthStats(ym);
+  return { ym, label, value: ms.spent, hasData: ms.count > 0, full: ymLabel(ym) };
+}
+
+// highlight: ym da evidenziare oppure funzione(ym) → bool
+function _renderTrend(items, highlight) {
+  const el      = document.getElementById("trend-chart");
+  const caption = document.getElementById("trend-caption");
+  const isHi    = typeof highlight === "function" ? highlight : (ym => ym === highlight);
+  const curYM   = currentYM();
+
+  // Media sui soli mesi completi con dati (il mese in corso è parziale)
+  const full = items.filter(i => i.hasData && i.ym !== curYM);
+  if (!items.some(i => i.hasData)) {
+    el.innerHTML = '<div class="empty-state">Nessun dato nel periodo</div>';
+    caption.textContent = "";
     return;
   }
+  const avg = full.length ? full.reduce((a, i) => a + i.value, 0) / full.length : 0;
+  const max = Math.max(avg, ...items.map(i => i.value), 1);
 
-  const recent = allMonths.slice(-6);
-  const maxSpent = Math.max(...recent.map(m => m.spent || 0), 1);
-
-  container.innerHTML = recent.map((m, i) => {
-    const pct = ((m.spent || 0) / maxSpent * 100).toFixed(0);
-    const isCurrent = i === recent.length - 1;
+  const cols = items.map((it, idx) => {
+    const pct = (it.value / max * 100).toFixed(1);
+    const hi  = isHi(it.ym);
+    const align = idx <= 1 ? " left" : idx >= items.length - 2 ? " right" : "";
+    const future = it.ym > curYM;
     return `
-      <div class="trend-bar-col">
-        <div class="trend-bar${isCurrent ? " current" : ""}" style="height:${pct}%"></div>
-        <div class="trend-bar-label">${escapeHtml((m.label || "").slice(0, 3))}</div>
+      <button class="trend-col${hi ? " sel" : ""}${it.hasData ? "" : " empty"}" data-ym="${it.ym}"
+              ${it.hasData ? "" : "disabled"} title="${escapeAttr(it.full)}: ${fmtEur(it.value)}"
+              aria-label="${escapeAttr(it.full)}: ${fmtEur(it.value)}">
+        ${hi && it.hasData ? `<span class="trend-val${align}" style="bottom:calc(${pct}% + 4px)">${fmtEur(it.value, 0)}</span>` : ""}
+        <span class="trend-bar${future ? " future" : ""}" style="height:${it.hasData ? pct : 0}%"></span>
+      </button>`;
+  }).join("");
+
+  const labels = items.map(it =>
+    `<span class="${isHi(it.ym) ? "sel" : ""}">${it.label}</span>`).join("");
+
+  el.innerHTML = `
+    <div class="trend-plot">
+      ${avg > 0 ? `<div class="trend-avg" style="bottom:${(avg / max * 100).toFixed(1)}%"></div>` : ""}
+      ${cols}
+    </div>
+    <div class="trend-labels">${labels}</div>`;
+
+  caption.innerHTML = avg > 0
+    ? `<span class="trend-avg-key"></span>media ${fmtEur(avg, 0)}/mese`
+    : "";
+}
+
+// monthsDivisor > 0 → mostra anche la media mensile per categoria
+function _renderCats(cats, total, monthsDivisor) {
+  const list   = document.getElementById("top-expenses-list");
+  const sorted = Object.entries(cats).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) {
+    list.innerHTML = '<div class="empty-state">Nessuna spesa nel periodo</div>';
+    return;
+  }
+  const maxAmt = sorted[0][1];
+  list.innerHTML = sorted.map(([cat, amt]) => {
+    const color = catColor(cat);
+    const share = total > 0 ? fmtPct(amt / total * 100) : "";
+    const sub   = monthsDivisor > 0 ? `${share} · ${fmtEur(amt / monthsDivisor, 0)}/mese` : share;
+    return `
+      <div class="cat-breakdown-row">
+        <div class="cat-dot" style="background:${color}"></div>
+        <div class="cat-breakdown-name">
+          ${escapeHtml(catLabel(cat))}
+          <span class="cat-breakdown-sub">${sub}</span>
+        </div>
+        <div class="cat-breakdown-bar-wrap">
+          <div class="cat-breakdown-bar" style="width:${(amt / maxAmt * 100).toFixed(0)}%;background:${color}"></div>
+        </div>
+        <span class="cat-breakdown-amount">${fmtEur(amt)}</span>
       </div>`;
   }).join("");
 }
 
-function _renderStatsAnnual() {
-  const months  = window._budgetMonths;
-  const card    = document.getElementById("stats-annual-card");
-  const list    = document.getElementById("stats-annual-list");
-  if (!card || !list) return;
-
-  if (!months || months.length === 0) {
-    card.classList.add("hidden");
-    return;
-  }
+function _renderMonthList(months) {
+  const card = document.getElementById("stats-annual-card");
+  const list = document.getElementById("stats-annual-list");
+  if (!months.length) { card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
 
-  const maxSpent = Math.max(...months.map(m => m.spent || 0), 1);
-  list.innerHTML = months.map(m => {
-    const ym    = m.ym || "";
-    const isCur = ym === _statsCurrentYM;
-    const pct   = ((m.spent || 0) / maxSpent * 100).toFixed(0);
+  const curYM = currentYM();
+  const maxSpent = Math.max(...months.map(ym => monthStats(ym).spent), 1);
+  list.innerHTML = months.map(ym => {
+    const ms  = monthStats(ym);
+    const cur = ym === curYM;
     return `
-      <div class="log-annual-row stats-annual-row" data-ym="${escapeAttr(ym)}">
-        <span class="log-annual-month${isCur ? " current" : ""}">${escapeHtml(m.labelFull || m.label || ym)}</span>
+      <button class="log-annual-row stats-annual-row" data-ym="${ym}">
+        <span class="log-annual-month${cur ? " current" : ""}">${MONTH_NAMES[parseInt(ym.slice(5), 10) - 1]}</span>
         <div class="log-annual-bar-wrap">
-          <div class="log-annual-bar${isCur ? " current" : ""}" style="width:${pct}%"></div>
+          <div class="log-annual-bar${cur ? " current" : ""}" style="width:${(ms.spent / maxSpent * 100).toFixed(0)}%"></div>
         </div>
-        <span class="log-annual-amt">${parseFloat(m.spent || 0).toFixed(2)}€</span>
-      </div>`;
+        <span class="log-annual-amt">
+          ${fmtEur(ms.spent, 0)}
+          <span class="log-annual-net ${ms.net >= 0 ? "pos" : "neg"}">${fmtSigned(ms.net, 0)}</span>
+        </span>
+      </button>`;
   }).join("");
-
-  list.querySelectorAll(".stats-annual-row[data-ym]").forEach(row => {
-    row.addEventListener("click", () => {
-      _statsCurrentYM = row.dataset.ym;
-      _updateStatsMonthLabel();
-      _loadStatsForMonth(_statsCurrentYM);
-    });
-  });
 }
 
-function _renderGas(month) {
-  const gasSpent    = parseFloat(month.gasSpent)    || 0;
-  const gasLiters   = parseFloat(month.gasLiters)   || 0;
-  const gasAvg      = parseFloat(month.gasAvgPrice)  || 0;
-  document.getElementById("gas-spent").textContent     = gasSpent   > 0 ? gasSpent.toFixed(2)  + "€"   : "—";
-  document.getElementById("gas-liters").textContent    = gasLiters  > 0 ? gasLiters.toFixed(1) + " L"  : "—";
-  document.getElementById("gas-avg-price").textContent = gasAvg     > 0 ? gasAvg.toFixed(3)    + "€/L" : "—";
-  document.getElementById("gas-card").classList.toggle("hidden", gasSpent === 0);
+function _renderAutonomy() {
+  const a = autonomy();
+  document.getElementById("survival-percentage").textContent =
+    isFinite(a.months) ? a.months.toFixed(1) + " mesi" : "∞";
+  document.getElementById("survival-bar-fill").style.width =
+    (isFinite(a.months) ? Math.min(100, a.months / 12 * 100) : 100) + "%";
+  document.getElementById("survival-sub").textContent =
+    `Patrimonio ÷ spesa media degli ultimi 3 mesi (${fmtEur(a.avg, 0)}/mese)`;
+}
+
+function _renderGas(s) {
+  document.getElementById("gas-spent").textContent     = s.gasSpent  > 0 ? fmtEur(s.gasSpent) : "—";
+  document.getElementById("gas-liters").textContent    = s.gasLiters > 0 ? s.gasLiters.toFixed(1).replace(".", ",") + " L" : "—";
+  document.getElementById("gas-avg-price").textContent = s.gasLiters > 0
+    ? (s.gasSpent / s.gasLiters).toFixed(3).replace(".", ",") + " €/L" : "—";
+  document.getElementById("gas-card").classList.toggle("hidden", s.gasSpent === 0);
+}
+
+function _renderInsight(lines) {
+  document.getElementById("stats-eval").innerHTML = lines.map(l => `<p>${l}</p>`).join("");
 }

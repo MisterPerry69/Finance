@@ -1,72 +1,66 @@
 /* ============================================
-   CASSA — Home pane rendering
+   TIDE — Home pane rendering
    ============================================ */
 
-function renderHome(data) {
-  if (!data) return;
-  renderBalances(data.balances, data.currentMonth);
-  renderTransactionLog(data.recentTransactions);
+const HIDDEN_VAL = "•••";
+
+function renderHome() {
+  _renderBalances();
+  _renderRecent();
 }
 
-function renderBalances(balances, month) {
-  if (!balances) return;
-  const total  = parseFloat(balances.total)  || 0;
-  const spent  = parseFloat(month?.spent)    || 0;
-  const income = parseFloat(month?.income)   || 0;
+function _renderBalances() {
+  const b      = balances();
+  const month  = monthStats(currentYM());
+  const budget = computeBudget();
+  const auto   = autonomy();
+  const hide   = v => _balanceHidden ? HIDDEN_VAL : fmtEur(v);
 
-  // Hero balance
-  if (!_balanceHidden) {
-    document.getElementById("total-balance").textContent = _formatAmt(total);
-  }
-
-  // Wallet strip
-  const HIDDEN_VAL = "•••";
-  document.getElementById("bank-val").textContent   = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.bank)   || 0);
-  document.getElementById("paypal-val").textContent = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.paypal) || 0);
-  document.getElementById("cash-val").textContent   = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.cash)   || 0);
-  document.getElementById("ifis-val").textContent   = _balanceHidden ? HIDDEN_VAL : _formatAmt(parseFloat(balances.ifis)   || 0);
+  document.getElementById("total-balance").textContent = _balanceHidden ? HIDDEN_VAL + " €" : fmtEur(b.total);
+  document.getElementById("bank-val").textContent   = hide(b.BANK);
+  document.getElementById("paypal-val").textContent = hide(b.PAYPAL);
+  document.getElementById("cash-val").textContent   = hide(b.CASH);
+  document.getElementById("ifis-val").textContent   = hide(b.IFIS);
 
   // Month context
-  document.getElementById("month-spent").textContent   = _formatAmt(spent);
-  document.getElementById("month-income").textContent  = _formatAmt(income);
-  const months = total > 0 && spent > 0 ? (total / spent).toFixed(1) + " m" : "∞";
-  document.getElementById("month-autonomy").textContent = months;
+  document.getElementById("month-spent").textContent  = fmtEur(month.spent);
+  document.getElementById("month-income").textContent = fmtEur(month.income);
+  document.getElementById("month-autonomy").textContent =
+    isFinite(auto.months) ? auto.months.toFixed(1) + " m" : "∞";
 
-  // Burn bar
-  const pct = income > 0 ? Math.min(100, (spent / income) * 100) : 0;
-  const fill = document.getElementById("burn-fill");
-  fill.style.width = pct + "%";
-  fill.className   = "prog-fill" + (pct >= 85 ? " danger" : pct >= 60 ? " warn" : "");
-  document.getElementById("burn-label").textContent =
-    income > 0 ? `${pct.toFixed(0)}% del reddito mensile speso` : "Nessuna entrata registrata";
+  // Barra: quanto del budget mensile (spendibile) è già stato usato
+  const fill  = document.getElementById("burn-fill");
+  const label = document.getElementById("burn-label");
+  if (budget.spendable > 0) {
+    const pct  = (month.spent / budget.spendable) * 100;
+    const left = budget.spendable - month.spent;
+    fill.style.width = Math.min(100, pct) + "%";
+    fill.className   = "prog-fill" + (pct >= 100 ? " danger" : pct >= 80 ? " warn" : "");
+    label.textContent = left >= 0
+      ? `${fmtPct(pct)} del budget mensile · restano ${fmtEur(left, 0)}`
+      : `Budget mensile superato di ${fmtEur(-left, 0)}`;
+  } else {
+    fill.style.width = "0%";
+    fill.className   = "prog-fill";
+    label.textContent = "Budget non disponibile: imposta le entrate nella tab Budget";
+  }
 
-  // Toggle btn
   const toggleBtn = document.getElementById("balance-toggle");
-  toggleBtn.innerHTML = _balanceHidden
-    ? '<i data-lucide="eye-off"></i>'
-    : '<i data-lucide="eye"></i>';
+  toggleBtn.innerHTML = _balanceHidden ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
   toggleBtn.onclick = toggleBalanceVisibility;
-  if (lucide) lucide.createIcons({ nodes: [toggleBtn] });
+  refreshIcons();
 }
 
 function toggleBalanceVisibility() {
   _balanceHidden = !_balanceHidden;
-  const el = document.getElementById("total-balance");
-  if (_balanceHidden) {
-    el.textContent = "••• €";
-  } else if (_cachedData) {
-    el.textContent = _formatAmt(parseFloat(_cachedData.balances.total) || 0);
-  }
-  if (_cachedData) renderBalances(_cachedData.balances, _cachedData.currentMonth);
+  _renderBalances();
 }
 
-function renderTransactionLog(transactions) {
+function _renderRecent() {
   const log = document.getElementById("finance-log");
   if (!log) return;
-  log.innerHTML = renderTransactionRows(transactions);
-  if (lucide) lucide.createIcons({ nodes: [log] });
-}
-
-function _formatAmt(n) {
-  return n.toFixed(2) + " €";
+  // Ultime 10 righe del foglio (ordine di inserimento)
+  const recent = _tx.filter(t => t.date).slice(-10).reverse();
+  log.innerHTML = renderTransactionRows(recent);
+  refreshIcons();
 }

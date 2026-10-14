@@ -48,7 +48,6 @@ function renderBudget() {
   if (!_dataReady) return;
   const b = computeBudget();
   _renderSettings(b);
-  renderRecurring();
   if (_budgetScope === "month") _renderMonthly(b);
   else                          _renderYearly(b);
   refreshIcons();

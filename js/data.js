@@ -82,9 +82,35 @@ function txKind(t) {
 }
 
 const GAS_LITERS_RE = /(\d+(?:[.,]\d+)?)\s*(?:l|lt|litri)\b/i;
+const FUEL_RE       = /\b(benzina|carburante|diesel|gasolio|rifornimento|gpl|metano)\b/i;
+
+// Rifornimento: spesa TRASPORTI con "benzina/carburante/…" o con i litri in nota.
+// I litri (e quindi il €/L) ci sono solo se scritti nella nota, es. "35,4 L".
+function fuelFill(t) {
+  if (t.cat !== "TRASPORTI" || txKind(t) !== "expense") return null;
+  const m = (t.note + " " + t.desc).match(GAS_LITERS_RE);
+  if (!m && !FUEL_RE.test(t.desc + " " + t.note)) return null;
+  const liters = m ? parseFloat(m[1].replace(",", ".")) : null;
+  return { date: t.date, ym: t.ym, amt: -t.amt, liters: liters > 0 ? liters : null, rowIndex: t.rowIndex };
+}
+
+// Statistiche carburante su un sottoinsieme di transazioni
+function fuelStats(list) {
+  const fills  = list.map(fuelFill).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+  const priced = fills.filter(f => f.liters);
+  const pricedSpent = priced.reduce((a, f) => a + f.amt, 0);
+  const liters = priced.reduce((a, f) => a + f.liters, 0);
+  return {
+    fills,
+    spent: fills.reduce((a, f) => a + f.amt, 0),
+    liters,
+    ppl: liters > 0 ? pricedSpent / liters : null,   // €/L medio ponderato
+    count: fills.length,
+  };
+}
 
 function _statsOf(list) {
-  const s = { spent: 0, income: 0, cats: {}, count: list.length, gasSpent: 0, gasLiters: 0, gasFills: [] };
+  const s = { spent: 0, income: 0, cats: {}, count: list.length };
   for (const t of list) {
     const kind = txKind(t);
     if (kind === "income") s.income += t.amt;
@@ -92,15 +118,6 @@ function _statsOf(list) {
       const v = -t.amt;
       s.spent += v;
       s.cats[t.cat || "ALTRO"] = (s.cats[t.cat || "ALTRO"] || 0) + v;
-      if (t.cat === "TRASPORTI") {
-        const m = (t.note + " " + t.desc).match(GAS_LITERS_RE);
-        if (m) {
-          const liters = parseFloat(m[1].replace(",", "."));
-          s.gasSpent += v;
-          s.gasLiters += liters;
-          s.gasFills.push({ date: t.date, liters, amt: v });
-        }
-      }
     }
   }
   s.net = s.income - s.spent;

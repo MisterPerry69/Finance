@@ -46,30 +46,25 @@
   color: var(--text);
 }
 
-/* Entry type tabs: 4 tasti separati con icona */
+/* Entry type tabs: 5 tasti separati, solo icona */
 .entry-type-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
 .entry-type-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 0 10px;
+  display: grid;
+  place-items: center;
+  height: 48px;
   border-radius: var(--r);
   background: var(--bg-card);
   border: 1.5px solid var(--border-soft);
   box-shadow: var(--shadow-sm);
-  font-size: var(--fs-micro);
-  font-weight: 800;
-  letter-spacing: 0.02em;
   color: var(--text-dim-2);
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
-.entry-type-tab svg { width: 20px; height: 20px; stroke-width: 2; }
+.entry-type-tab svg { width: 21px; height: 21px; stroke-width: 2; }
 .entry-type-tab.active {
   background: var(--teal-dim);
   border-color: var(--teal);
@@ -131,7 +126,6 @@
 .wallet-selector {
   display: flex;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-4);
 }
 .wallet-btn {
   flex: 1;
@@ -302,3 +296,18 @@
   font-size: var(--fs-small);
   font-weight: 900;
 }
+
+/* ---- Scheda ricorrenti nel modale ---- */
+.recurring-intro {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  line-height: 1.5;
+}
+#form-recurring .recurring-list {
+  background: var(--bg-card);
+  border-radius: var(--r);
+  padding: 0 var(--sp-4);
+  box-shadow: var(--shadow-sm);
+}
+#form-recurring .recurring-list .empty-state { padding: var(--sp-4) 0; }

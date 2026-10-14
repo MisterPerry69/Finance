@@ -1,5 +1,5 @@
 /* ============================================
-   TIDE — Uscite ricorrenti (card nella tab Budget + modal)
+   TIDE — Uscite ricorrenti (scheda del modale "Nuova voce" + modal di modifica)
    Il backend le registra da solo alla scadenza: qui si gestisce l'elenco.
    ============================================ */
 
@@ -29,7 +29,7 @@ function renderRecurring() {
   const items = [..._recurring].sort((a, b) => (a.next || "").localeCompare(b.next || ""));
 
   if (!items.length) {
-    list.innerHTML = '<div class="empty-state">Nessuna uscita ricorrente. Aggiungi abbonamenti, bollette e addebiti automatici: verranno registrati da soli.</div>';
+    list.innerHTML = '<div class="empty-state">Nessuna uscita ricorrente</div>';
     total.innerHTML = "";
     return;
   }

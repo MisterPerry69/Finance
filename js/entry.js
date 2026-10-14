@@ -72,8 +72,16 @@ function _setWallet(wallet) {
   });
 }
 
+const ENTRY_TITLES = {
+  single: "Nuova voce", multi: "Più voci", transfer: "Sposta tra conti",
+  fuel: "Rifornimento", recurring: "Uscite ricorrenti",
+};
+
 function _switchEntryTab(tab) {
   document.querySelectorAll(".entry-type-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  document.getElementById("entry-modal-title").textContent = ENTRY_TITLES[tab] || "Nuova voce";
+  document.getElementById("form-recurring").classList.toggle("hidden", tab !== "recurring");
+  if (tab === "recurring") { renderRecurring(); refreshIcons(); }
   document.getElementById("form-single").classList.toggle("hidden",   tab !== "single");
   document.getElementById("form-multi").classList.toggle("hidden",    tab !== "multi");
   document.getElementById("form-transfer").classList.toggle("hidden", tab !== "transfer");

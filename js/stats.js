@@ -16,21 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("stats-month-prev").addEventListener("click", () => _stepStats(-1));
   document.getElementById("stats-month-next").addEventListener("click", () => _stepStats(+1));
 
-  // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
-  // Carburante: statistiche in un modal dedicato, aperto dall'icona in cima al Logbook
-  const fuelModal = document.getElementById("fuel-modal");
-  const closeFuel = () => fuelModal.classList.add("hidden");
-  document.getElementById("stats-fuel-btn").addEventListener("click", () => {
-    fuelModal.classList.remove("hidden");
-    refreshIcons();
-  });
-  document.getElementById("fuel-modal-close").addEventListener("click", closeFuel);
-  fuelModal.addEventListener("click", e => { if (e.target === fuelModal) closeFuel(); });
-  document.getElementById("gas-add-btn").addEventListener("click", () => {
-    closeFuel();
-    openEntryModal("fuel");
-  });
+  // Carburante: pagina dedicata, aperta sullo stesso periodo del Logbook
+  document.getElementById("stats-fuel-btn").addEventListener("click", () =>
+    openFuelPage(_statsMode, _statsYM));
 
+  // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
   document.getElementById("pane-stats").addEventListener("click", e => {
     const target = e.target.closest("[data-ym]");
     if (!target || target.disabled) return;
@@ -119,18 +109,12 @@ function _renderStatsMonth() {
   const prevIncome = prev.length ? prev.reduce((a, p) => a + monthStats(p).income, 0) / prev.length : 0;
   _renderKpis(s, spentSub, prevIncome > 0 ? `media ${fmtEur(prevIncome, 0)}` : "");
 
-  // Andamento: 12 mesi che terminano col mese selezionato
-  const items = [];
-  for (let i = 11; i >= 0; i--) {
-    const k = addMonths(ym, -i);
-    items.push(_trendItem(k, MONTH_SHORT[parseInt(k.slice(5, 7), 10) - 1]));
-  }
-  _renderTrend(items, ym);
+  // Andamento: da gennaio a dicembre dell'anno del mese selezionato
+  _renderTrend(_yearItems(parseInt(ym.slice(0, 4), 10)), ym);
 
   document.getElementById("cats-heading").textContent = "Per categoria";
   _renderCats(s.cats, s.spent, 0);
   document.getElementById("stats-annual-card").classList.add("hidden");
-  _renderGas(s);
 
   // Sintesi
   const lines = [];
@@ -157,7 +141,7 @@ function _renderStatsMonth() {
       const rate = s.net / s.income * 100;
       lines.push(rate >= 0
         ? `Hai messo da parte il <b>${fmtPct(rate)}</b> delle entrate (${fmtEur(s.net, 0)}).`
-        : `Hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato.`);
+        : `Hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato (${pctOver(-s.net, s.income)} oltre le entrate).`);
     } else {
       lines.push("Nessuna entrata registrata in questo mese.");
     }
@@ -187,17 +171,11 @@ function _renderStatsYear() {
 
   _renderKpis(s, `media ${fmtEur(s.spent / n, 0)}/mese`, `media ${fmtEur(s.income / n, 0)}/mese`);
 
-  const items = [];
-  for (let m = 1; m <= 12; m++) {
-    const ym = `${y}-${String(m).padStart(2, "0")}`;
-    items.push(_trendItem(ym, MONTH_SHORT[m - 1]));
-  }
-  _renderTrend(items, ym => ym === curYM);
+  _renderTrend(_yearItems(y), ym => ym === curYM);
 
   document.getElementById("cats-heading").textContent = `Per categoria · ${y}`;
   _renderCats(s.cats, s.spent, n);
   _renderMonthList(months);
-  _renderGas(s);
 
   // Sintesi
   const lines = [];
@@ -217,7 +195,7 @@ function _renderStatsYear() {
       const rate = s.net / s.income * 100;
       lines.push(rate >= 0
         ? `Tasso di risparmio dell'anno: <b>${fmtPct(rate)}</b> (${fmtEur(s.net, 0)}).`
-        : `Nell'anno hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato.`);
+        : `Nell'anno hai speso <b>${fmtEur(-s.net, 0)}</b> più di quanto è entrato (${pctOver(-s.net, s.income)} oltre le entrate).`);
     }
 
     // Confronto con gli stessi mesi dell'anno prima
@@ -260,7 +238,7 @@ function _renderKpis(s, spentSub, incomeSub) {
     chip.textContent = `${fmtPct(s.net / s.income * 100)} delle entrate`;
     chip.className   = "period-chip pos";
   } else {
-    chip.textContent = "spese oltre le entrate";
+    chip.textContent = `${pctOver(-s.net, s.income)} oltre le entrate`;
     chip.className   = "period-chip neg";
   }
 }
@@ -270,50 +248,14 @@ function _trendItem(ym, label) {
   return { ym, label, value: ms.spent, hasData: ms.count > 0, full: ymLabel(ym) };
 }
 
-// highlight: ym da evidenziare oppure funzione(ym) → bool
+function _yearItems(y) {
+  const items = [];
+  for (let m = 1; m <= 12; m++) items.push(_trendItem(`${y}-${String(m).padStart(2, "0")}`, MONTH_SHORT[m - 1]));
+  return items;
+}
+
 function _renderTrend(items, highlight) {
-  const el      = document.getElementById("trend-chart");
-  const caption = document.getElementById("trend-caption");
-  const isHi    = typeof highlight === "function" ? highlight : (ym => ym === highlight);
-  const curYM   = currentYM();
-
-  // Media sui soli mesi completi con dati (il mese in corso è parziale)
-  const full = items.filter(i => i.hasData && i.ym !== curYM);
-  if (!items.some(i => i.hasData)) {
-    el.innerHTML = '<div class="empty-state">Nessun dato nel periodo</div>';
-    caption.textContent = "";
-    return;
-  }
-  const avg = full.length ? full.reduce((a, i) => a + i.value, 0) / full.length : 0;
-  const max = Math.max(avg, ...items.map(i => i.value), 1);
-
-  const cols = items.map((it, idx) => {
-    const pct = (it.value / max * 100).toFixed(1);
-    const hi  = isHi(it.ym);
-    const align = idx <= 1 ? " left" : idx >= items.length - 2 ? " right" : "";
-    const future = it.ym > curYM;
-    return `
-      <button class="trend-col${hi ? " sel" : ""}${it.hasData ? "" : " empty"}" data-ym="${it.ym}"
-              ${it.hasData ? "" : "disabled"} title="${escapeAttr(it.full)}: ${fmtEur(it.value)}"
-              aria-label="${escapeAttr(it.full)}: ${fmtEur(it.value)}">
-        ${hi && it.hasData ? `<span class="trend-val${align}" style="bottom:calc(${pct}% + 4px)">${fmtEur(it.value, 0)}</span>` : ""}
-        <span class="trend-bar${future ? " future" : ""}" style="height:${it.hasData ? pct : 0}%"></span>
-      </button>`;
-  }).join("");
-
-  const labels = items.map(it =>
-    `<span class="${isHi(it.ym) ? "sel" : ""}">${it.label}</span>`).join("");
-
-  el.innerHTML = `
-    <div class="trend-plot">
-      ${avg > 0 ? `<div class="trend-avg" style="bottom:${(avg / max * 100).toFixed(1)}%"></div>` : ""}
-      ${cols}
-    </div>
-    <div class="trend-labels">${labels}</div>`;
-
-  caption.innerHTML = avg > 0
-    ? `<span class="trend-avg-key"></span>media ${fmtEur(avg, 0)}/mese`
-    : "";
+  renderBarChart(document.getElementById("trend-chart"), document.getElementById("trend-caption"), items, highlight);
 }
 
 // monthsDivisor > 0 → mostra anche la media mensile per categoria
@@ -377,33 +319,6 @@ function _renderAutonomy() {
     (isFinite(a.months) ? Math.min(100, a.months / 12 * 100) : 100) + "%";
   document.getElementById("survival-sub").textContent =
     `Patrimonio ÷ spesa media degli ultimi 3 mesi (${fmtEur(a.avg, 0)}/mese)`;
-}
-
-// La card resta sempre visibile: contiene il pulsante per registrare un rifornimento
-function _renderGas(s) {
-  const dec = (n, d) => n.toFixed(d).replace(".", ",");
-  const has = s.gasLiters > 0;
-  document.getElementById("gas-period").textContent =
-    _statsMode === "month" ? ymLabel(_statsYM) : `Anno ${_statsYear}`;
-  document.getElementById("gas-avg-price").textContent = has ? dec(s.gasSpent / s.gasLiters, 3) : "—";
-  document.getElementById("gas-liters").textContent    = has ? dec(s.gasLiters, 1) : "—";
-  document.getElementById("gas-spent").textContent     = has ? fmtEur(s.gasSpent, 0) : "—";
-
-  const list  = document.getElementById("gas-list");
-  const fills = [...s.gasFills].sort((a, b) => b.date.localeCompare(a.date));
-  if (!fills.length) {
-    list.innerHTML = '<div class="gas-empty">Nessun rifornimento nel periodo</div>';
-    return;
-  }
-  const shown = fills.slice(0, 12);
-  list.innerHTML = shown.map(f => `
-    <div class="gas-fill">
-      <span class="gas-fill-date">${formatDate(f.date, _statsMode === "year")}</span>
-      <span class="gas-fill-liters">${dec(f.liters, 1)} L</span>
-      <span class="gas-fill-ppl">${dec(f.amt / f.liters, 3)} €/L</span>
-      <span class="gas-fill-amt">${fmtEur(f.amt)}</span>
-    </div>`).join("") +
-    (fills.length > shown.length ? `<div class="gas-empty">e altri ${fills.length - shown.length}</div>` : "");
 }
 
 function _renderInsight(lines) {

@@ -59,10 +59,10 @@ async function _saveEdit() {
   btn.disabled = false;
 }
 
-// Tap su una riga transazione (home e registro) → modifica.
+// Tap su una riga transazione (home, registro, rifornimenti) → modifica.
 // Su desktop compare anche la matita in hover.
 document.addEventListener("click", e => {
-  const row = e.target.closest(".trans-row[data-row-index]");
+  const row = e.target.closest("[data-row-index]");
   if (!row) return;
   const tx = _txByRow.get(parseInt(row.dataset.rowIndex, 10));
   if (tx) openEditModal(tx);

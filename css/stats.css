@@ -372,28 +372,22 @@
 .scope-icon:active { background: rgba(217,119,6,0.10); }
 .scope-icon svg { width: 17px; height: 17px; stroke-width: 2; }
 
-/* ---- Modal carburante ---- */
-.modal-subtitle {
-  margin-top: 2px;
-  font-size: var(--fs-small);
-  font-weight: 700;
-  color: var(--text-dim-2);
+/* ---- Pagina carburante ---- */
+.fuel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-2) var(--sp-4) 120px;
+  scrollbar-width: none;
 }
-#fuel-modal .gas-tile { background: var(--bg-card); box-shadow: var(--shadow-sm); }
-#fuel-modal .gas-tile:first-child { background: rgba(217,119,6,0.10); box-shadow: none; }
-#fuel-modal .gas-list {
-  margin-top: var(--sp-4);
-  padding: 0 var(--sp-4);
-  background: var(--bg-card);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-sm);
-}
-#fuel-modal .gas-empty { padding: var(--sp-4) 0; }
-.gas-add {
-  margin-top: var(--sp-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-2);
-}
-.gas-add svg { width: 18px; height: 18px; stroke-width: 2.5; }
+.fuel-scroll::-webkit-scrollbar { display: none; }
+.fuel-scroll .card { margin-bottom: var(--sp-4); }
+.fuel-tiles { margin-bottom: var(--sp-4); }
+.fuel-tiles .gas-tile { background: var(--bg-card); box-shadow: var(--shadow-sm); padding: var(--sp-4) var(--sp-3); }
+.fuel-tiles .gas-tile:first-child { background: rgba(217,119,6,0.10); box-shadow: none; }
+.fuel-tiles .gas-tile-val { font-size: 1.35rem; }
+#fuel-chart .trend-col.sel .trend-bar,
+#fuel-chart .trend-col:not(:disabled):active .trend-bar { background: var(--color-gas); }
+#fuel-chart .trend-bar { background: rgba(217,119,6,0.30); }
+#fuel-add-btn { color: var(--color-gas); }
+.gas-fill[data-row-index] { cursor: pointer; }
+.gas-fill[data-row-index]:active { opacity: 0.6; }

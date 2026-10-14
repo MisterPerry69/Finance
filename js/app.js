@@ -67,7 +67,9 @@ function renderAll() {
   renderHome();
   renderStats();
   renderBudget();
+  if (typeof renderRecurring === "function") renderRecurring();
   if (typeof isLogOpen === "function" && isLogOpen()) renderLog();
+  if (typeof isFuelOpen === "function" && isFuelOpen()) renderFuel();
 }
 
 // ---- Tab navigation ----
@@ -268,5 +270,56 @@ function renderTransactionRows(transactions, opts) {
 
 const WALLET_LABELS = { BANK: "Bank", PAYPAL: "PayPal", CASH: "Cash", IFIS: "Deposito" };
 function walletLabel(w) { return WALLET_LABELS[w] || w; }
+
+// Percentuale "oltre": oltre il 999% non ha più senso leggerla
+function pctOver(part, base) {
+  if (!(base > 0)) return "";
+  const p = part / base * 100;
+  return p > 999 ? ">999%" : fmtPct(p);
+}
+
+/* Grafico a barre mensile (Logbook e Carburante).
+   items: [{ ym, label, value, hasData, full }]
+   highlight: ym da evidenziare oppure funzione(ym) → bool
+   opts.fmt: formattazione del valore; opts.avgLabel: testo della media */
+function renderBarChart(el, caption, items, highlight, opts) {
+  const o     = Object.assign({ fmt: v => fmtEur(v, 0), avgLabel: avg => `media ${fmtEur(avg, 0)}/mese` }, opts || {});
+  const isHi  = typeof highlight === "function" ? highlight : (ym => ym === highlight);
+  const curYM = currentYM();
+
+  if (!items.some(i => i.hasData)) {
+    el.innerHTML = '<div class="empty-state">Nessun dato nel periodo</div>';
+    if (caption) caption.textContent = "";
+    return;
+  }
+  // Media sui soli mesi completi con dati (il mese in corso è parziale)
+  const full = items.filter(i => i.hasData && i.ym !== curYM);
+  const avg  = full.length ? full.reduce((a, i) => a + i.value, 0) / full.length : 0;
+  const max  = Math.max(avg, ...items.map(i => i.value), 1e-9);
+
+  const cols = items.map((it, idx) => {
+    const pct   = (it.value / max * 100).toFixed(1);
+    const hi    = isHi(it.ym);
+    const align = idx <= 1 ? " left" : idx >= items.length - 2 ? " right" : "";
+    return `
+      <button class="trend-col${hi ? " sel" : ""}${it.hasData ? "" : " empty"}" data-ym="${it.ym}"
+              ${it.hasData ? "" : "disabled"} title="${escapeAttr(it.full)}: ${escapeAttr(o.fmt(it.value))}"
+              aria-label="${escapeAttr(it.full)}: ${escapeAttr(o.fmt(it.value))}">
+        ${hi && it.hasData ? `<span class="trend-val${align}" style="bottom:calc(${pct}% + 4px)">${o.fmt(it.value)}</span>` : ""}
+        <span class="trend-bar" style="height:${it.hasData ? pct : 0}%"></span>
+      </button>`;
+  }).join("");
+
+  const labels = items.map(it => `<span class="${isHi(it.ym) ? "sel" : ""}">${it.label}</span>`).join("");
+
+  el.innerHTML = `
+    <div class="trend-plot">
+      ${avg > 0 ? `<div class="trend-avg" style="bottom:${(avg / max * 100).toFixed(1)}%"></div>` : ""}
+      ${cols}
+    </div>
+    <div class="trend-labels">${labels}</div>`;
+
+  if (caption) caption.innerHTML = avg > 0 ? `<span class="trend-avg-key"></span>${o.avgLabel(avg)}` : "";
+}
 
 // openLogModal / closeLogModal defined in log.js

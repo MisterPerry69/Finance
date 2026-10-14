@@ -61,10 +61,11 @@ function openSettings(tab) {
 }
 
 function _setSettingsTab(tab) {
-  document.querySelectorAll("#settings-modal [data-settings-tab]").forEach(b =>
-    b.classList.toggle("active", b.dataset.settingsTab === tab));
-  document.getElementById("settings-categories").classList.toggle("hidden", tab !== "categories");
-  document.getElementById("settings-recurring").classList.toggle("hidden", tab !== "recurring");
+  document.querySelectorAll("#settings-modal [data-settings-tab]").forEach(b => {
+    b.classList.toggle("active", b.dataset.settingsTab === tab);
+    document.getElementById("settings-" + b.dataset.settingsTab).classList.toggle("hidden", b.dataset.settingsTab !== tab);
+  });
+  if (tab === "security") renderSecurity();
 }
 
 function renderCategories() {

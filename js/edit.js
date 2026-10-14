@@ -60,7 +60,6 @@ async function _saveEdit() {
 }
 
 // Tap su una riga transazione (home, registro, rifornimenti) → modifica.
-// Su desktop compare anche la matita in hover.
 document.addEventListener("click", e => {
   const row = e.target.closest("[data-row-index]");
   if (!row) return;

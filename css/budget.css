@@ -365,3 +365,69 @@
 .rec-actions { display: flex; gap: var(--sp-2); }
 .rec-actions .submit-btn { flex: 2; }
 .rec-actions .btn-pill.btn-secondary { flex: 1; color: var(--color-negative); }
+
+/* ---- Categorie ---- */
+.cat-group + .cat-group { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border-ghost); }
+.cat-group-head {
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: var(--sp-2);
+}
+.cat-group-head span {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+}
+.cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border-radius: var(--r-pill);
+  background: var(--bg-subtle);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--text);
+}
+.cat-chip:active { opacity: 0.6; }
+.cat-chip svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.cat-chip-empty { font-size: var(--fs-micro); font-weight: 600; color: var(--text-dim-2); }
+
+.cat-type-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: var(--navy-dim);
+  border-radius: var(--r-pill);
+  padding: 3px;
+}
+.cat-type-btn {
+  padding: 9px 0;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--text-dim-2);
+}
+.cat-type-btn.active { background: var(--bg-card); color: var(--teal); box-shadow: var(--shadow-sm); }
+#cat-type-hint { margin-top: var(--sp-2); }
+
+.cat-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 6px;
+}
+.cat-icon-btn {
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-soft);
+  color: var(--text-dim);
+}
+.cat-icon-btn svg { width: 18px; height: 18px; stroke-width: 2; }
+.cat-icon-btn.active { border-color: var(--teal); background: var(--teal-dim); color: var(--teal); }
+#cat-name:disabled { opacity: 0.7; }

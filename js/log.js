@@ -65,7 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ---- Open / Close ----
-function openLogModal() {
+// opts (facoltativo): { cat, period: "month" | "year", ym } → registro già filtrato
+function openLogModal(opts) {
+  opts = opts && opts.cat !== undefined ? opts : {};
   const modal = document.getElementById("log-modal");
   modal.classList.remove("hidden");
 
@@ -82,8 +84,17 @@ function openLogModal() {
   });
   _aiSearchActive = false;
   _logQuery  = "";
-  _logPeriod = "month";
-  _logYM     = currentYM();
+  _logPeriod = opts.period === "year" ? "year" : "month";
+  _logYM     = opts.ym || currentYM();
+
+  if (opts.cat) {
+    const sel = document.getElementById("log-cat-filter");
+    if (![...sel.options].some(o => o.value === opts.cat)) {
+      sel.add(new Option(catLabel(opts.cat), opts.cat));
+    }
+    sel.value = opts.cat;
+    sel.classList.add("has-value");
+  }
 
   renderLog();
 }

@@ -32,8 +32,9 @@ function _renderBalances() {
   const fill  = document.getElementById("burn-fill");
   const label = document.getElementById("burn-label");
   if (budget.spendable > 0) {
-    const pct  = (month.spent / budget.spendable) * 100;
-    const left = budget.spendable - month.spent;
+    const used = month.spent - oneoffSpent(month);   // gli imprevisti non consumano il budget
+    const pct  = (used / budget.spendable) * 100;
+    const left = budget.spendable - used;
     fill.style.width = Math.min(100, pct) + "%";
     fill.className   = "prog-fill" + (pct >= 100 ? " danger" : pct >= 80 ? " warn" : "");
     label.textContent = left >= 0

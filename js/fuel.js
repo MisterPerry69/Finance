@@ -78,12 +78,12 @@ function renderFuel() {
   const allSpent = _statsOf(_tx.filter(inPeriod)).spent;
 
   // Riquadri
-  document.getElementById("fuel-ppl").textContent    = f.ppl ? _dec(f.ppl, 3) : "—";
-  document.getElementById("fuel-liters").textContent = f.liters > 0 ? _dec(f.liters, 1) : "—";
-  document.getElementById("fuel-liters-sub").textContent =
+  document.getElementById("fp-ppl").textContent    = f.ppl ? _dec(f.ppl, 3) : "—";
+  document.getElementById("fp-liters").textContent = f.liters > 0 ? _dec(f.liters, 1) : "—";
+  document.getElementById("fp-liters-sub").textContent =
     `litri · ${f.count} rifornimen${f.count === 1 ? "to" : "ti"}`;
-  document.getElementById("fuel-spent").textContent  = f.spent > 0 ? fmtEur(f.spent, 0) : "—";
-  document.getElementById("fuel-spent-sub").textContent = allSpent > 0 && f.spent > 0
+  document.getElementById("fp-spent").textContent  = f.spent > 0 ? fmtEur(f.spent, 0) : "—";
+  document.getElementById("fp-spent-sub").textContent = allSpent > 0 && f.spent > 0
     ? `speso · ${fmtPct(f.spent / allSpent * 100)} delle spese` : "speso";
 
   // Grafico: spesa carburante per mese, da gennaio a dicembre

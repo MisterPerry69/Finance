@@ -8,6 +8,7 @@ let _tx       = [];          // [{rowIndex, date, ym, year, amt, wallet, cat, de
 let _txByRow  = new Map();
 let _monthMemo = new Map();
 let _recurring = [];       // uscite ricorrenti (foglio "recurring")
+let _categories = [];      // categorie create dall'utente + personalizzazioni (foglio "categories")
 
 const MONTH_NAMES = [
   "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
@@ -17,8 +18,53 @@ const MONTH_SHORT = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott"
 
 // Né spese né entrate: spostano soldi o correggono un saldo
 const NEUTRAL_CATS   = new Set(["SET_BALANCE", "TRASFERIMENTO", "RIMBORSO"]);
-// Spese difficili da comprimere: nel budget non vengono tagliate
-const ESSENTIAL_CATS = new Set(["CASA", "SPESA", "SALUTE", "TRASPORTI"]);
+/* ---- Categorie di spesa ----
+   type: "essential" → il budget non le taglia
+         "variable"  → il budget le riduce se serve per risparmiare
+         "oneoff"    → imprevisti: contano come spesa ma restano fuori dalle medie del budget */
+const BUILTIN_CATEGORIES = [
+  { name: "CASA",       icon: "house",          color: "#25B7BB", type: "essential" },
+  { name: "SPESA",      icon: "shopping-cart",  color: "#d4a017", type: "essential" },
+  { name: "SALUTE",     icon: "heart",          color: "#f472b6", type: "essential" },
+  { name: "TRASPORTI",  icon: "car",            color: "#fb923c", type: "essential" },
+  { name: "CIBO",       icon: "utensils",       color: "#f0b429", type: "variable" },
+  { name: "SVAGO",      icon: "gamepad-2",      color: "#a78bfa", type: "variable" },
+  { name: "SHOPPING",   icon: "shopping-bag",   color: "#e879f9", type: "variable" },
+  { name: "TECH",       icon: "cpu",            color: "#0891b2", type: "variable" },
+  { name: "IMPREVISTI", icon: "triangle-alert", color: "#ef4444", type: "oneoff" },
+  { name: "ALTRO",      icon: "layers",         color: "#7E9BA5", type: "variable" },
+];
+// Colori per le categorie create dall'utente (assegnati in ordine, mai ciclati a caso)
+const CUSTOM_CAT_COLORS = ["#2563eb", "#16a34a", "#c2410c", "#7c3aed", "#db2777", "#0d9488", "#ca8a04", "#4b5563"];
+const CATEGORY_TYPE_LABELS = { essential: "Essenziale", variable: "Variabile", oneoff: "Imprevisto" };
+
+let _catDefsMemo = null;
+function expenseCategories() {
+  if (_catDefsMemo) return _catDefsMemo;
+  const over = new Map(_categories.map(c => [c.name, c]));
+  const list = BUILTIN_CATEGORIES.map(b => {
+    const o = over.get(b.name);
+    return Object.assign({}, b, { builtin: true, customized: !!o },
+      o ? { icon: o.icon || b.icon, type: o.type || b.type } : {});
+  });
+  let ci = 0;
+  _categories.filter(c => !BUILTIN_CATEGORIES.some(b => b.name === c.name)).forEach(c => {
+    list.push({ name: c.name, icon: c.icon || "tag", type: c.type || "variable", builtin: false,
+                color: CUSTOM_CAT_COLORS[ci++ % CUSTOM_CAT_COLORS.length] });
+  });
+  return (_catDefsMemo = list);
+}
+function categoryDef(name) {
+  return expenseCategories().find(c => c.name === String(name).toUpperCase()) || null;
+}
+function catType(name) {
+  const d = categoryDef(name);
+  return d ? d.type : "variable";
+}
+// Spesa del periodo senza gli imprevisti (quella che si confronta col budget)
+function oneoffSpent(stats) {
+  return Object.entries(stats.cats).reduce((a, [c, v]) => catType(c) === "oneoff" ? a + v : a, 0);
+}
 
 // ---- Caricamento ----
 async function fetchAllTransactions() {
@@ -42,6 +88,8 @@ async function fetchAllTransactions() {
   });
   _txByRow  = new Map(_tx.map(t => [t.rowIndex, t]));
   _recurring = Array.isArray(res.recurring) ? res.recurring : [];
+  _categories = Array.isArray(res.categories) ? res.categories : [];
+  _catDefsMemo = null;
   _monthMemo = new Map();
 }
 
@@ -247,22 +295,24 @@ function computeBudget() {
   const spendable = Math.max(0, income - savings);
 
   const catAvg = {};
+  let oneoffTotal = 0;
   histStats.forEach(m => Object.entries(m.cats).forEach(([c, v]) => {
     if (c === "AI_PENDING") return;
+    if (catType(c) === "oneoff") { oneoffTotal += v; return; }   // imprevisti: fuori dalle medie
     catAvg[c] = (catAvg[c] || 0) + v;
   }));
   Object.keys(catAvg).forEach(c => { catAvg[c] /= hist.length; });
 
   let essTotal = 0, flexTotal = 0;
   Object.entries(catAvg).forEach(([c, v]) => {
-    if (ESSENTIAL_CATS.has(c)) essTotal += v; else flexTotal += v;
+    if (catType(c) === "essential") essTotal += v; else flexTotal += v;
   });
   const room   = spendable - essTotal;
   const factor = flexTotal > 0 ? Math.min(1, Math.max(0, room / flexTotal)) : 1;
 
   const targets = {};
   Object.entries(catAvg).forEach(([c, v]) => {
-    const t = round5(ESSENTIAL_CATS.has(c) ? v : v * factor);
+    const t = round5(catType(c) === "essential" ? v : v * factor);
     if (t > 0) targets[c] = t;
   });
   const allocated = Object.values(targets).reduce((a, b) => a + b, 0);
@@ -278,6 +328,7 @@ function computeBudget() {
     essentialsOver: room < 0,
     targets, catAvg, allocated,
     margin: spendable - allocated,
+    oneoffAvg: hist.length ? oneoffTotal / hist.length : 0,
   };
 }
 

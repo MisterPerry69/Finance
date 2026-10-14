@@ -35,6 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// Tocco su una categoria → registro filtrato (mese corrente o anno corrente)
+document.addEventListener("DOMContentLoaded", () => {
+  ["budget-categories-list", "budget-year-cats-list"].forEach(id =>
+    document.getElementById(id).addEventListener("click", e => {
+      const row = e.target.closest("[data-cat]");
+      if (row) openLogModal({ cat: row.dataset.cat, period: _budgetScope, ym: currentYM() });
+    }));
+});
+
 function _setScope(scope) {
   _budgetScope = scope;
   document.getElementById("scope-month").classList.toggle("active", scope === "month");
@@ -64,6 +73,9 @@ const HERO_COLORS = { ok: "#25B7BB", warn: "#f59e0b", danger: "#ef4444" };
 function _renderMonthly(b) {
   const ym      = currentYM();
   const s       = monthStats(ym);
+  // Gli imprevisti non consumano il budget: escono dal risparmio
+  const oneoff  = oneoffSpent(s);
+  const spent   = s.spent - oneoff;
   const day     = new Date().getDate();
   const dim     = daysInMonth(ym);
   const left    = dim - day + 1;
@@ -80,15 +92,15 @@ function _renderMonthly(b) {
     numEl.textContent = "—";
     numEl.className   = "budget-hero-num ok";
     subEl.textContent = "Nessuna entrata negli ultimi mesi: impostale qui sotto";
-    footEl.textContent = `Speso finora: ${fmtEur(s.spent, 0)}`;
+    footEl.textContent = `Speso finora: ${fmtEur(spent, 0)}`;
     bar.style.width = "0%";
     pace.classList.add("hidden");
   } else {
-    const remaining = b.spendable - s.spent;
-    const cls = _heroClass(s.spent, b.spendable * paceFrac, b.spendable);
+    const remaining = b.spendable - spent;
+    const cls = _heroClass(spent, b.spendable * paceFrac, b.spendable);
     numEl.textContent = fmtEur(remaining, 0);
     numEl.className   = "budget-hero-num " + cls;
-    subEl.textContent = `su ${fmtEur(b.spendable, 0)} spendibili a ${MONTH_NAMES[new Date().getMonth()].toLowerCase()} · spesi ${fmtEur(s.spent, 0)}`;
+    subEl.textContent = `su ${fmtEur(b.spendable, 0)} spendibili a ${MONTH_NAMES[new Date().getMonth()].toLowerCase()} · spesi ${fmtEur(spent, 0)}`;
     footEl.textContent = remaining > 0
       ? `≈ ${fmtEur(remaining / left, 0)} al giorno per ${left === 1 ? "oggi" : `i prossimi ${left} giorni`}`
       : `Budget del mese superato di ${fmtEur(-remaining, 0)}`;
@@ -107,9 +119,12 @@ function _renderMonthly(b) {
   if (b.essentialsOver) {
     notes.push(`Le sole spese essenziali (${fmtEur(b.essentials, 0)}) superano lo spendibile: abbassa l'obiettivo di risparmio o rivedi le entrate.`);
   } else if (b.factor < 1) {
-    notes.push(`Per risparmiare il ${b.savingsPct}%, le spese variabili sono ridotte al ${fmtPct(b.factor * 100)} della tua media. Casa, spesa, salute e trasporti restano intere.`);
+    const ess = expenseCategories().filter(c => c.type === "essential").map(c => catTitle(c.name).toLowerCase());
+    notes.push(`Per risparmiare il ${b.savingsPct}%, le spese variabili sono ridotte al ${fmtPct(b.factor * 100)} della tua media.` +
+      (ess.length ? ` Restano intere le essenziali: ${ess.join(", ")}.` : ""));
   }
   if (b.margin >= 5) notes.push(`Margine libero non assegnato a nessuna categoria: ${fmtEur(b.margin, 0)}.`);
+  if (oneoff > 0) notes.push(`<b>Imprevisti</b> questo mese: ${fmtEur(oneoff, 0)}. Sono fuori dal budget e pesano sul risparmio.`);
   document.getElementById("budget-cats-note").innerHTML = notes.map(n => `<p>${n}</p>`).join("");
 
   // Sintesi
@@ -126,8 +141,11 @@ function _renderMonthly(b) {
         : `Le tue abitudini sono compatibili con un risparmio del ${b.savingsPct}%: ti avanzano circa ${fmtEur(-gap, 0)} in più al mese.`);
     }
   }
+  if (b.oneoffAvg >= 1) {
+    lines.push(`Gli imprevisti degli ultimi ${b.histMonths} mesi valgono in media ${fmtEur(b.oneoffAvg, 0)} al mese: sono esclusi dai target e riducono il risparmio reale.`);
+  }
   if (day >= 3 && day < dim && b.spendable > 0) {
-    const proj = projectCurrentMonth();
+    const proj = projectCurrentMonth() - oneoff;
     lines.push(`Al ritmo attuale chiuderai il mese a circa <b>${fmtEur(proj, 0)}</b>` +
       (proj > b.spendable ? `, ${fmtEur(proj - b.spendable, 0)} oltre il budget.` : ", dentro il budget."));
   }
@@ -148,6 +166,8 @@ function _renderYearly(b) {
   const day    = now.getDate();
   const dim    = daysInMonth(ym);
   const ys     = yearStats(y);
+  const yOne   = oneoffSpent(ys);
+  const ySpent = ys.spent - yOne;
   const first  = firstDataYM();
 
   // Se i dati partono a metà anno, il budget copre solo i mesi da lì in poi
@@ -167,7 +187,7 @@ function _renderYearly(b) {
   }
   const savingsTarget = expIncome * b.savingsPct / 100;
   const spendableYear = Math.max(0, expIncome - savingsTarget);
-  const remaining     = spendableYear - ys.spent;
+  const remaining     = spendableYear - ySpent;
   const monthsLeft    = Math.max(0.5, totalMonths - elapsed);
 
   document.getElementById("budget-year-label").textContent = `Spendibile ${y}`;
@@ -179,11 +199,11 @@ function _renderYearly(b) {
     numEl.textContent = "—";
     numEl.className   = "budget-hero-num ok";
     document.getElementById("budget-year-sub").textContent = "Nessuna entrata prevista: impostale qui sotto";
-    document.getElementById("budget-year-foot").textContent = `Speso nel ${y}: ${fmtEur(ys.spent, 0)}`;
+    document.getElementById("budget-year-foot").textContent = `Speso nel ${y}: ${fmtEur(ySpent, 0)}`;
     bar.style.width = "0%";
     pace.classList.add("hidden");
   } else {
-    const cls = _heroClass(ys.spent, spendableYear * elapsedFrac, spendableYear);
+    const cls = _heroClass(ySpent, spendableYear * elapsedFrac, spendableYear);
     numEl.textContent = fmtEur(remaining, 0);
     numEl.className   = "budget-hero-num " + cls;
     document.getElementById("budget-year-sub").textContent =
@@ -204,7 +224,7 @@ function _renderYearly(b) {
   // Sintesi
   const lines = [];
   if (elapsed >= 1) {
-    const proj = ys.spent / elapsed * totalMonths;
+    const proj = ySpent / elapsed * totalMonths + yOne;
     const projSave = expIncome - proj;
     lines.push(`Al ritmo attuale nel ${y} spenderai circa <b>${fmtEur(proj, 0)}</b>.`);
     if (expIncome > 0) {
@@ -212,7 +232,8 @@ function _renderYearly(b) {
     }
   }
   if (ys.income > 0) {
-    lines.push(`Finora: entrate ${fmtEur(ys.income, 0)}, spese ${fmtEur(ys.spent, 0)}, messo da parte ${fmtSigned(ys.net, 0)}.`);
+    lines.push(`Finora: entrate ${fmtEur(ys.income, 0)}, spese ${fmtEur(ys.spent, 0)}` +
+      (yOne > 0 ? ` (di cui imprevisti ${fmtEur(yOne, 0)})` : "") + `, messo da parte ${fmtSigned(ys.net, 0)}.`);
   }
   const ahead = rows
     .filter(r => r.target > 0 && r.spent > r.target * elapsedFrac * 1.1)
@@ -248,7 +269,7 @@ function _renderSettings(b) {
 // ---- Righe categoria ----
 // targets mensili × months = target del periodo
 function _catRows(targets, spentCats, months) {
-  const cats = new Set([...Object.keys(targets), ...Object.keys(spentCats)]);
+  const cats = new Set([...Object.keys(targets), ...Object.keys(spentCats)].filter(c => catType(c) !== "oneoff"));
   const rows = [];
   cats.forEach(cat => {
     rows.push({ cat, spent: spentCats[cat] || 0, target: (targets[cat] || 0) * months });
@@ -283,7 +304,7 @@ function _catRow(r, paceFrac) {
     ? `<span class="budget-cat-pace" style="left:${((1 - paceFrac) * 100).toFixed(1)}%"></span>` : "";
 
   return `
-    <div class="budget-cat-row">
+    <button class="budget-cat-row" data-cat="${escapeAttr(r.cat)}">
       <div class="budget-cat-icon"><i data-lucide="${catIcon(r.cat)}"></i></div>
       <div class="budget-cat-body">
         <div class="budget-cat-name">${escapeHtml(catLabel(r.cat))}</div>
@@ -294,5 +315,5 @@ function _catRow(r, paceFrac) {
         <div class="budget-cat-remain${hasTarget && remain < 0 ? " over" : ""}">${info}</div>
       </div>
       <span class="budget-cat-amount">${fmtEur(r.spent, 0)}${hasTarget ? `<span class="budget-cat-target"> / ${fmtEur(r.target, 0)}</span>` : ""}</span>
-    </div>`;
+    </button>`;
 }

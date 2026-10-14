@@ -21,7 +21,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   setupAnalystBubble();
   setupFAB();
 
-  document.getElementById("open-log-btn").addEventListener("click", openLogModal);
+  document.getElementById("open-log-btn").addEventListener("click", () => openLogModal());
 
   const [, loadError] = await Promise.all([
     _animateSplashBar(),
@@ -64,10 +64,12 @@ async function loadData() {
 
 function renderAll() {
   if (!_dataReady) return;
+  populateCategorySelects();
   renderHome();
   renderStats();
   renderBudget();
   if (typeof renderRecurring === "function") renderRecurring();
+  if (typeof renderCategories === "function") renderCategories();
   if (typeof isLogOpen === "function" && isLogOpen()) renderLog();
   if (typeof isFuelOpen === "function" && isFuelOpen()) renderFuel();
 }
@@ -237,9 +239,37 @@ const CAT_LABELS = {
   AI_PENDING:  "DA CATEGORIZZARE",
 };
 
-function catIcon(cat)  { return CAT_ICONS[String(cat).toUpperCase()] || "circle"; }
-function catColor(cat) { return CAT_COLORS[String(cat).toUpperCase()] || "#7E9BA5"; }
+function catIcon(cat) {
+  const d = categoryDef(cat);
+  return d ? d.icon : (CAT_ICONS[String(cat).toUpperCase()] || "circle");
+}
+function catColor(cat) {
+  const d = categoryDef(cat);
+  return d ? d.color : (CAT_COLORS[String(cat).toUpperCase()] || "#7E9BA5");
+}
 function catLabel(cat) { return CAT_LABELS[String(cat).toUpperCase()] || String(cat).toUpperCase(); }
+// "IMPREVISTI" → "Imprevisti" (per le tendine)
+function catTitle(cat) {
+  const l = catLabel(cat).toLowerCase();
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
+
+// Riempie le tendine delle categorie (incluse quelle create dall'utente)
+const NON_EXPENSE_CATS = ["ENTRATE", "RIMBORSO", "TRASFERIMENTO", "SET_BALANCE"];
+function populateCategorySelects() {
+  const fill = (id, names, first) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = (first ? `<option value="">${first}</option>` : "") +
+      names.map(n => `<option value="${escapeAttr(n)}">${escapeHtml(catTitle(n))}</option>`).join("");
+    if ([...el.options].some(o => o.value === cur)) el.value = cur;
+  };
+  const exp = expenseCategories().map(c => c.name);
+  fill("edit-cat", exp.concat(NON_EXPENSE_CATS));
+  fill("log-cat-filter", exp.concat(NON_EXPENSE_CATS, ["AI_PENDING"]), "Tutte le categorie");
+  fill("rec-cat", exp);
+}
 
 // transactions: oggetti della cache (data.js); opts.withYear mostra la data completa
 function renderTransactionRows(transactions, opts) {
@@ -256,7 +286,6 @@ function renderTransactionRows(transactions, opts) {
     const dateStr   = formatDate(t.date, withYear);
     return `
       <div class="trans-row${isPending ? " pending-row" : ""}" data-row-index="${t.rowIndex}">
-        <button class="trans-edit-btn" data-row-index="${t.rowIndex}" aria-label="Modifica transazione"><i data-lucide="pencil"></i></button>
         <div class="trans-icon-wrap"><i data-lucide="${catIcon(t.cat)}"></i></div>
         <div class="trans-body">
           <div class="trans-desc">${escapeHtml(t.desc)}</div>

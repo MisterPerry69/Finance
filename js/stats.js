@@ -22,6 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Tap su una barra dell'andamento o su una riga "mese per mese" → apre quel mese
   document.getElementById("pane-stats").addEventListener("click", e => {
+    // Tocco su una categoria → registro filtrato per quella categoria e periodo
+    const catRow = e.target.closest("[data-cat]");
+    if (catRow) { openLogModal({ cat: catRow.dataset.cat, period: _statsMode, ym: _statsYM }); return; }
     const target = e.target.closest("[data-ym]");
     if (!target || target.disabled) return;
     _statsMode = "month";
@@ -272,7 +275,7 @@ function _renderCats(cats, total, monthsDivisor) {
     const share = total > 0 ? fmtPct(amt / total * 100) : "";
     const sub   = monthsDivisor > 0 ? `${share} · ${fmtEur(amt / monthsDivisor, 0)}/mese` : share;
     return `
-      <div class="cat-breakdown-row">
+      <button class="cat-breakdown-row" data-cat="${escapeAttr(cat)}">
         <div class="cat-dot" style="background:${color}"></div>
         <div class="cat-breakdown-name">
           ${escapeHtml(catLabel(cat))}
@@ -282,7 +285,7 @@ function _renderCats(cats, total, monthsDivisor) {
           <div class="cat-breakdown-bar" style="width:${(amt / maxAmt * 100).toFixed(0)}%;background:${color}"></div>
         </div>
         <span class="cat-breakdown-amount">${fmtEur(amt)}</span>
-      </div>`;
+      </button>`;
   }).join("");
 }
 

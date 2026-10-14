@@ -23,16 +23,21 @@ const NEUTRAL_CATS   = new Set(["SET_BALANCE", "TRASFERIMENTO", "RIMBORSO"]);
          "variable"  → il budget le riduce se serve per risparmiare
          "oneoff"    → imprevisti: contano come spesa ma restano fuori dalle medie del budget */
 const BUILTIN_CATEGORIES = [
-  { name: "CASA",       icon: "house",          color: "#25B7BB", type: "essential" },
-  { name: "SPESA",      icon: "shopping-cart",  color: "#d4a017", type: "essential" },
-  { name: "SALUTE",     icon: "heart",          color: "#f472b6", type: "essential" },
-  { name: "TRASPORTI",  icon: "car",            color: "#fb923c", type: "essential" },
-  { name: "CIBO",       icon: "utensils",       color: "#f0b429", type: "variable" },
-  { name: "SVAGO",      icon: "gamepad-2",      color: "#a78bfa", type: "variable" },
-  { name: "SHOPPING",   icon: "shopping-bag",   color: "#e879f9", type: "variable" },
-  { name: "TECH",       icon: "cpu",            color: "#0891b2", type: "variable" },
-  { name: "IMPREVISTI", icon: "triangle-alert", color: "#ef4444", type: "oneoff" },
-  { name: "ALTRO",      icon: "layers",         color: "#7E9BA5", type: "variable" },
+  { name: "CASA",            icon: "house",          color: "#25B7BB", type: "essential" },
+  { name: "SPESA",           icon: "shopping-cart",  color: "#d4a017", type: "essential" },
+  { name: "SALUTE",          icon: "heart",          color: "#f472b6", type: "essential" },
+  { name: "CARBURANTE",      icon: "fuel",           color: "#d97706", type: "essential" },
+  { name: "AUTO",            icon: "car",            color: "#fb923c", type: "essential" },
+  { name: "ABBONAMENTI",     icon: "repeat",         color: "#0891b2", type: "essential" },
+  { name: "BANCA E POLIZZE", icon: "landmark",       color: "#475569", type: "essential" },
+  { name: "CIBO",            icon: "utensils",       color: "#f0b429", type: "variable" },
+  { name: "SVAGO",           icon: "gamepad-2",      color: "#a78bfa", type: "variable" },
+  { name: "SHOPPING",        icon: "shopping-bag",   color: "#e879f9", type: "variable" },
+  { name: "VIAGGI",          icon: "plane",          color: "#2563eb", type: "variable" },
+  { name: "CURA PERSONALE",  icon: "scissors",       color: "#14b8a6", type: "variable" },
+  { name: "REGALI",          icon: "gift",           color: "#db2777", type: "variable" },
+  { name: "IMPREVISTI",      icon: "triangle-alert", color: "#ef4444", type: "oneoff" },
+  { name: "ALTRO",           icon: "layers",         color: "#7E9BA5", type: "variable" },
 ];
 // Colori per le categorie create dall'utente (assegnati in ordine, mai ciclati a caso)
 const CUSTOM_CAT_COLORS = ["#2563eb", "#16a34a", "#c2410c", "#7c3aed", "#db2777", "#0d9488", "#ca8a04", "#4b5563"];
@@ -132,12 +137,13 @@ function txKind(t) {
 const GAS_LITERS_RE = /(\d+(?:[.,]\d+)?)\s*(?:l|lt|litri)\b/i;
 const FUEL_RE       = /\b(benzina|carburante|diesel|gasolio|rifornimento|gpl|metano)\b/i;
 
-// Rifornimento: spesa TRASPORTI con "benzina/carburante/…" o con i litri in nota.
+// Rifornimento: ogni spesa in CARBURANTE (e, per le voci vecchie, TRASPORTI con benzina o litri).
 // I litri (e quindi il €/L) ci sono solo se scritti nella nota, es. "35,4 L".
 function fuelFill(t) {
-  if (t.cat !== "TRASPORTI" || txKind(t) !== "expense") return null;
+  if (txKind(t) !== "expense") return null;
   const m = (t.note + " " + t.desc).match(GAS_LITERS_RE);
-  if (!m && !FUEL_RE.test(t.desc + " " + t.note)) return null;
+  const legacy = t.cat === "TRASPORTI" && (m || FUEL_RE.test(t.desc + " " + t.note));
+  if (t.cat !== "CARBURANTE" && !legacy) return null;
   const liters = m ? parseFloat(m[1].replace(",", ".")) : null;
   return { date: t.date, ym: t.ym, amt: -t.amt, liters: liters > 0 ? liters : null, rowIndex: t.rowIndex };
 }

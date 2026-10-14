@@ -1,5 +1,5 @@
 /* ============================================
-   TIDE — Gestione categorie (card nella tab Budget + modal)
+   TIDE — Gestione categorie (modal aperto dal ⚙️ in home + modal di modifica)
    ============================================ */
 
 const CATEGORY_ICONS = [
@@ -25,6 +25,14 @@ let _catIcon    = "tag";
 
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("category-modal");
+  const listModal = document.getElementById("categories-modal");
+  document.getElementById("open-categories-btn").addEventListener("click", () => {
+    renderCategories();
+    listModal.classList.remove("hidden");
+    refreshIcons();
+  });
+  document.getElementById("categories-modal-close").addEventListener("click", () => listModal.classList.add("hidden"));
+  listModal.addEventListener("click", e => { if (e.target === listModal) listModal.classList.add("hidden"); });
   document.getElementById("category-add-btn").addEventListener("click", () => openCategoryModal(null));
   document.getElementById("category-modal-close").addEventListener("click", closeCategoryModal);
   modal.addEventListener("click", e => { if (e.target === modal) closeCategoryModal(); });

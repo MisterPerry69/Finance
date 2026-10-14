@@ -11,14 +11,14 @@
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tokens.css?v=7" />
-  <link rel="stylesheet" href="css/base.css?v=7" />
-  <link rel="stylesheet" href="css/home.css?v=7" />
-  <link rel="stylesheet" href="css/stats.css?v=7" />
-  <link rel="stylesheet" href="css/budget.css?v=7" />
-  <link rel="stylesheet" href="css/log.css?v=7" />
-  <link rel="stylesheet" href="css/entry.css?v=7" />
-  <link rel="stylesheet" href="css/edit.css?v=7" />
+  <link rel="stylesheet" href="css/tokens.css?v=8" />
+  <link rel="stylesheet" href="css/base.css?v=8" />
+  <link rel="stylesheet" href="css/home.css?v=8" />
+  <link rel="stylesheet" href="css/stats.css?v=8" />
+  <link rel="stylesheet" href="css/budget.css?v=8" />
+  <link rel="stylesheet" href="css/log.css?v=8" />
+  <link rel="stylesheet" href="css/entry.css?v=8" />
+  <link rel="stylesheet" href="css/edit.css?v=8" />
 </head>
 <body>
 
@@ -166,19 +166,15 @@
           </div>
         </div>
 
-        <!-- ===== CATEGORIE ===== -->
-        <div class="card">
-          <div class="card-head">
-            <div class="section-heading no-mb">Categorie</div>
-            <button class="chip-btn" id="category-add-btn"><i data-lucide="plus"></i> Nuova</button>
-          </div>
-          <div id="category-groups"></div>
-        </div>
-
       </div>
 
       <!-- HOME PANE (center) -->
       <div class="pane" id="pane-home">
+        <!-- Impostazioni (categorie) -->
+        <button class="icon-btn home-settings-btn" id="open-categories-btn" aria-label="Categorie" title="Categorie">
+          <i data-lucide="settings"></i>
+        </button>
+
         <!-- Balance hero -->
         <div class="balance-hero">
           <div class="balance-hero-label">Patrimonio totale</div>
@@ -686,6 +682,20 @@
     </div>
   </div>
 
+  <!-- CATEGORIES MODAL (elenco) -->
+  <div id="categories-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Categorie">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Categorie</div>
+        <button class="icon-btn modal-close" id="categories-modal-close" aria-label="Chiudi">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div id="category-groups"></div>
+      <button id="category-add-btn" class="add-row-btn cat-add-btn">+ Nuova categoria</button>
+    </div>
+  </div>
+
   <!-- CATEGORY MODAL -->
   <div id="category-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Categoria">
     <div class="modal-box">
@@ -785,17 +795,17 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=7"></script>
-  <script src="js/data.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
-  <script src="js/home.js?v=7"></script>
-  <script src="js/stats.js?v=7"></script>
-  <script src="js/budget.js?v=7"></script>
-  <script src="js/log.js?v=7"></script>
-  <script src="js/entry.js?v=7"></script>
-  <script src="js/edit.js?v=7"></script>
-  <script src="js/recurring.js?v=7"></script>
-  <script src="js/fuel.js?v=7"></script>
-  <script src="js/categories.js?v=7"></script>
+  <script src="js/api.js?v=8"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/home.js?v=8"></script>
+  <script src="js/stats.js?v=8"></script>
+  <script src="js/budget.js?v=8"></script>
+  <script src="js/log.js?v=8"></script>
+  <script src="js/entry.js?v=8"></script>
+  <script src="js/edit.js?v=8"></script>
+  <script src="js/recurring.js?v=8"></script>
+  <script src="js/fuel.js?v=8"></script>
+  <script src="js/categories.js?v=8"></script>
 </body>
 </html>

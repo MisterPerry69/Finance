@@ -431,3 +431,6 @@
 .cat-icon-btn svg { width: 18px; height: 18px; stroke-width: 2; }
 .cat-icon-btn.active { border-color: var(--teal); background: var(--teal-dim); color: var(--teal); }
 #cat-name:disabled { opacity: 0.7; }
+.cat-add-btn { margin-top: var(--sp-4); }
+#categories-modal .cat-group { background: var(--bg-card); border-radius: var(--r); padding: var(--sp-4); box-shadow: var(--shadow-sm); }
+#categories-modal .cat-group + .cat-group { margin-top: var(--sp-3); border-top: none; }

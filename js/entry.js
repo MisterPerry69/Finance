@@ -224,7 +224,7 @@ async function submitFuel() {
   btn.disabled    = true;
 
   try {
-    // "CARBURANTE" → TRASPORTI per regola; i litri in nota alimentano le statistiche
+    // "CARBURANTE" → categoria Carburante per regola; i litri in nota danno il €/L
     await _post("finance_smart_entry", {
       amount: -Math.abs(amount),
       desc:   "CARBURANTE",

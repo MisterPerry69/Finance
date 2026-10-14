@@ -141,3 +141,12 @@
   justify-content: space-between;
   margin: var(--sp-3);
 }
+
+/* Ingranaggio categorie, in alto a destra nella home */
+#pane-home { position: relative; }
+.home-settings-btn {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-4);
+  z-index: 2;
+}

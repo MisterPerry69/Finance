@@ -11,14 +11,14 @@
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tokens.css?v=4" />
-  <link rel="stylesheet" href="css/base.css?v=4" />
-  <link rel="stylesheet" href="css/home.css?v=4" />
-  <link rel="stylesheet" href="css/stats.css?v=4" />
-  <link rel="stylesheet" href="css/budget.css?v=4" />
-  <link rel="stylesheet" href="css/log.css?v=4" />
-  <link rel="stylesheet" href="css/entry.css?v=4" />
-  <link rel="stylesheet" href="css/edit.css?v=4" />
+  <link rel="stylesheet" href="css/tokens.css?v=5" />
+  <link rel="stylesheet" href="css/base.css?v=5" />
+  <link rel="stylesheet" href="css/home.css?v=5" />
+  <link rel="stylesheet" href="css/stats.css?v=5" />
+  <link rel="stylesheet" href="css/budget.css?v=5" />
+  <link rel="stylesheet" href="css/log.css?v=5" />
+  <link rel="stylesheet" href="css/entry.css?v=5" />
+  <link rel="stylesheet" href="css/edit.css?v=5" />
 </head>
 <body>
 
@@ -144,6 +144,16 @@
             <div class="insight-label"><i data-lucide="lightbulb"></i> Proiezione anno</div>
             <div id="budget-year-summary" class="insight-text"></div>
           </div>
+        </div>
+
+        <!-- ===== USCITE RICORRENTI ===== -->
+        <div class="card" id="recurring-card">
+          <div class="card-head">
+            <div class="section-heading no-mb">Uscite ricorrenti</div>
+            <button class="chip-btn" id="recurring-add-btn"><i data-lucide="plus"></i> Aggiungi</button>
+          </div>
+          <div id="recurring-list" class="recurring-list"></div>
+          <div id="recurring-total" class="budget-note"></div>
         </div>
 
         <!-- ===== IMPOSTAZIONI (condivise) ===== -->
@@ -568,6 +578,82 @@
     </div>
   </div>
 
+  <!-- RECURRING MODAL -->
+  <div id="recurring-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Uscita ricorrente">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="recurring-modal-title">Nuova ricorrente</div>
+        <button class="icon-btn modal-close" id="recurring-modal-close" aria-label="Chiudi">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="entry-form">
+        <input type="hidden" id="rec-id" />
+        <div class="form-field">
+          <label class="field-label" for="rec-desc">Descrizione</label>
+          <input type="text" id="rec-desc" class="field-input" placeholder="es. Netflix, affitto..." autocomplete="off" />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label" for="rec-amount">Importo (€)</label>
+            <input type="number" id="rec-amount" class="field-input" placeholder="0.00" step="0.01" min="0" inputmode="decimal" />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="rec-day">Giorno del mese</label>
+            <input type="number" id="rec-day" class="field-input" placeholder="1" min="1" max="31" inputmode="numeric" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label" for="rec-every">Ogni</label>
+            <select id="rec-every" class="field-select">
+              <option value="1">Mese</option>
+              <option value="2">2 mesi</option>
+              <option value="3">3 mesi</option>
+              <option value="6">6 mesi</option>
+              <option value="12">Anno</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="rec-wallet">Conto</label>
+            <select id="rec-wallet" class="field-select">
+              <option value="BANK">Bank</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="CASH">Cash</option>
+              <option value="IFIS">Deposito</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label" for="rec-cat">Categoria</label>
+            <select id="rec-cat" class="field-select">
+              <option value="CASA">Casa</option>
+              <option value="TECH">Tech</option>
+              <option value="SALUTE">Salute</option>
+              <option value="TRASPORTI">Trasporti</option>
+              <option value="SVAGO">Svago</option>
+              <option value="SPESA">Spesa</option>
+              <option value="CIBO">Cibo</option>
+              <option value="SHOPPING">Shopping</option>
+              <option value="ALTRO">Altro</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="rec-note">Nota</label>
+            <input type="text" id="rec-note" class="field-input" placeholder="opzionale" autocomplete="off" />
+          </div>
+        </div>
+        <div class="rec-hint" id="rec-hint"></div>
+        <div class="edit-error" id="rec-error" role="alert"></div>
+        <div class="rec-actions">
+          <button class="btn-pill btn-secondary hidden" id="rec-delete">Elimina</button>
+          <button class="submit-btn" id="rec-save">Salva</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT TRANSACTION MODAL -->
   <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Modifica transazione">
     <div class="modal-box edit-modal-box">
@@ -631,14 +717,15 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=4"></script>
-  <script src="js/data.js?v=4"></script>
-  <script src="js/app.js?v=4"></script>
-  <script src="js/home.js?v=4"></script>
-  <script src="js/stats.js?v=4"></script>
-  <script src="js/budget.js?v=4"></script>
-  <script src="js/log.js?v=4"></script>
-  <script src="js/entry.js?v=4"></script>
-  <script src="js/edit.js?v=4"></script>
+  <script src="js/api.js?v=5"></script>
+  <script src="js/data.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
+  <script src="js/home.js?v=5"></script>
+  <script src="js/stats.js?v=5"></script>
+  <script src="js/budget.js?v=5"></script>
+  <script src="js/log.js?v=5"></script>
+  <script src="js/entry.js?v=5"></script>
+  <script src="js/edit.js?v=5"></script>
+  <script src="js/recurring.js?v=5"></script>
 </body>
 </html>

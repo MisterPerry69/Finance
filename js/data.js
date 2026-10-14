@@ -7,6 +7,7 @@
 let _tx       = [];          // [{rowIndex, date, ym, year, amt, wallet, cat, desc, note}]
 let _txByRow  = new Map();
 let _monthMemo = new Map();
+let _recurring = [];       // uscite ricorrenti (foglio "recurring")
 
 const MONTH_NAMES = [
   "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
@@ -40,6 +41,7 @@ async function fetchAllTransactions() {
     };
   });
   _txByRow  = new Map(_tx.map(t => [t.rowIndex, t]));
+  _recurring = Array.isArray(res.recurring) ? res.recurring : [];
   _monthMemo = new Map();
 }
 

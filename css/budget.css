@@ -314,3 +314,54 @@
   color: var(--text-dim-2);
   line-height: 1.5;
 }
+
+/* ---- Uscite ricorrenti ---- */
+.recurring-list { display: flex; flex-direction: column; }
+.recurring-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-ghost);
+  text-align: left;
+  font-family: var(--font);
+}
+.recurring-row:last-child { border-bottom: none; }
+.recurring-row:active { opacity: 0.6; }
+.recurring-body { flex: 1; min-width: 0; }
+.recurring-desc {
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recurring-note { color: var(--teal); font-weight: 700; }
+.recurring-sub {
+  margin-top: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim-2);
+}
+.recurring-amt {
+  flex-shrink: 0;
+  font-size: var(--fs-small);
+  font-weight: 800;
+  color: var(--color-negative);
+}
+
+/* Modal ricorrente */
+.rec-hint {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-dim-2);
+  line-height: 1.5;
+}
+.rec-hint:empty { display: none; }
+.rec-actions { display: flex; gap: var(--sp-2); }
+.rec-actions .submit-btn { flex: 2; }
+.rec-actions .btn-pill.btn-secondary { flex: 1; color: var(--color-negative); }

@@ -46,10 +46,10 @@
   color: var(--text);
 }
 
-/* Entry type tabs: 5 tasti separati, solo icona */
+/* Entry type tabs: 4 tasti separati, solo icona */
 .entry-type-tabs {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-2);
   margin-bottom: var(--sp-5);
 }
@@ -304,10 +304,10 @@
   color: var(--text-dim-2);
   line-height: 1.5;
 }
-#form-recurring .recurring-list {
+#settings-recurring .recurring-list {
   background: var(--bg-card);
   border-radius: var(--r);
   padding: 0 var(--sp-4);
   box-shadow: var(--shadow-sm);
 }
-#form-recurring .recurring-list .empty-state { padding: var(--sp-4) 0; }
+#settings-recurring .recurring-list .empty-state { padding: var(--sp-4) 0; }

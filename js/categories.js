@@ -1,5 +1,6 @@
 /* ============================================
-   TIDE — Gestione categorie (modal aperto dal ⚙️ in home + modal di modifica)
+   TIDE — Impostazioni (⚙️ in home): schede Categorie e Ricorrenti
+   + modal di modifica categoria
    ============================================ */
 
 const CATEGORY_ICONS = [
@@ -25,14 +26,12 @@ let _catIcon    = "tag";
 
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("category-modal");
-  const listModal = document.getElementById("categories-modal");
-  document.getElementById("open-categories-btn").addEventListener("click", () => {
-    renderCategories();
-    listModal.classList.remove("hidden");
-    refreshIcons();
-  });
-  document.getElementById("categories-modal-close").addEventListener("click", () => listModal.classList.add("hidden"));
-  listModal.addEventListener("click", e => { if (e.target === listModal) listModal.classList.add("hidden"); });
+  const settings = document.getElementById("settings-modal");
+  document.getElementById("open-settings-btn").addEventListener("click", () => openSettings("categories"));
+  document.getElementById("settings-modal-close").addEventListener("click", () => settings.classList.add("hidden"));
+  settings.addEventListener("click", e => { if (e.target === settings) settings.classList.add("hidden"); });
+  settings.querySelectorAll("[data-settings-tab]").forEach(b =>
+    b.addEventListener("click", () => _setSettingsTab(b.dataset.settingsTab)));
   document.getElementById("category-add-btn").addEventListener("click", () => openCategoryModal(null));
   document.getElementById("category-modal-close").addEventListener("click", closeCategoryModal);
   modal.addEventListener("click", e => { if (e.target === modal) closeCategoryModal(); });
@@ -52,6 +51,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (b) openCategoryModal(categoryDef(b.dataset.catName));
   });
 });
+
+function openSettings(tab) {
+  renderCategories();
+  renderRecurring();
+  _setSettingsTab(tab || "categories");
+  document.getElementById("settings-modal").classList.remove("hidden");
+  refreshIcons();
+}
+
+function _setSettingsTab(tab) {
+  document.querySelectorAll("#settings-modal [data-settings-tab]").forEach(b =>
+    b.classList.toggle("active", b.dataset.settingsTab === tab));
+  document.getElementById("settings-categories").classList.toggle("hidden", tab !== "categories");
+  document.getElementById("settings-recurring").classList.toggle("hidden", tab !== "recurring");
+}
 
 function renderCategories() {
   const el = document.getElementById("category-groups");

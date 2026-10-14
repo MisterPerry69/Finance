@@ -1,5 +1,5 @@
 /* ============================================
-   TIDE — Uscite ricorrenti (scheda del modale "Nuova voce" + modal di modifica)
+   TIDE — Uscite ricorrenti (scheda delle Impostazioni + modal di modifica)
    Il backend le registra da solo alla scadenza: qui si gestisce l'elenco.
    ============================================ */
 

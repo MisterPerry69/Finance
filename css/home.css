@@ -142,11 +142,15 @@
   margin: var(--sp-3);
 }
 
-/* Ingranaggio categorie, in alto a destra nella home */
+/* Occhio + impostazioni, in alto a destra nella home */
 #pane-home { position: relative; }
-.home-settings-btn {
+.home-actions {
   position: absolute;
   top: var(--sp-3);
-  right: var(--sp-4);
+  right: 20px;
+  display: flex;
+  gap: var(--sp-2);
   z-index: 2;
 }
+.settings-btn { background: var(--navy); color: #fff; }
+.settings-btn:active { background: var(--navy); opacity: 0.85; }

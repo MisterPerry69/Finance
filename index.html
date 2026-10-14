@@ -11,14 +11,14 @@
   <!-- Favicon faro SVG inline -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='16' y='2' width='16' height='9' rx='3' fill='%23C8352A'/%3E%3Cpath d='M18 11 L14 38 H34 L30 11 Z' fill='%23143C51'/%3E%3Crect x='10' y='38' width='28' height='5' rx='2.5' fill='%23143C51'/%3E%3Cpath d='M2 46 Q12 42 24 46 Q36 50 46 46' stroke='%2325B7BB' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <link rel="stylesheet" href="css/tokens.css?v=8" />
-  <link rel="stylesheet" href="css/base.css?v=8" />
-  <link rel="stylesheet" href="css/home.css?v=8" />
-  <link rel="stylesheet" href="css/stats.css?v=8" />
-  <link rel="stylesheet" href="css/budget.css?v=8" />
-  <link rel="stylesheet" href="css/log.css?v=8" />
-  <link rel="stylesheet" href="css/entry.css?v=8" />
-  <link rel="stylesheet" href="css/edit.css?v=8" />
+  <link rel="stylesheet" href="css/tokens.css?v=9" />
+  <link rel="stylesheet" href="css/base.css?v=9" />
+  <link rel="stylesheet" href="css/home.css?v=9" />
+  <link rel="stylesheet" href="css/stats.css?v=9" />
+  <link rel="stylesheet" href="css/budget.css?v=9" />
+  <link rel="stylesheet" href="css/log.css?v=9" />
+  <link rel="stylesheet" href="css/entry.css?v=9" />
+  <link rel="stylesheet" href="css/edit.css?v=9" />
 </head>
 <body>
 
@@ -170,17 +170,19 @@
 
       <!-- HOME PANE (center) -->
       <div class="pane" id="pane-home">
-        <!-- Impostazioni (categorie) -->
-        <button class="icon-btn home-settings-btn" id="open-categories-btn" aria-label="Categorie" title="Categorie">
-          <i data-lucide="settings"></i>
-        </button>
+        <!-- Occhio (nascondi saldi) + impostazioni -->
+        <div class="home-actions">
+          <button class="icon-btn" id="balance-toggle" aria-label="Mostra/nascondi saldi"></button>
+          <button class="icon-btn settings-btn" id="open-settings-btn" aria-label="Impostazioni" title="Impostazioni">
+            <i data-lucide="settings"></i>
+          </button>
+        </div>
 
         <!-- Balance hero -->
         <div class="balance-hero">
           <div class="balance-hero-label">Patrimonio totale</div>
           <div class="balance-hero-row">
             <div id="total-balance" class="big-num">—</div>
-            <button class="icon-btn" id="balance-toggle" aria-label="Mostra/nascondi"></button>
           </div>
         </div>
 
@@ -499,7 +501,6 @@
         <button class="entry-type-tab" data-tab="multi" aria-label="Multipla" title="Multipla"><i data-lucide="list-plus"></i></button>
         <button class="entry-type-tab" data-tab="transfer" aria-label="Sposta tra conti" title="Sposta tra conti"><i data-lucide="arrow-right-left"></i></button>
         <button class="entry-type-tab" data-tab="fuel" aria-label="Carburante" title="Carburante"><i data-lucide="fuel"></i></button>
-        <button class="entry-type-tab" data-tab="recurring" aria-label="Uscite ricorrenti" title="Uscite ricorrenti"><i data-lucide="repeat"></i></button>
       </div>
 
       <!-- Single form -->
@@ -574,14 +575,6 @@
         <button id="submit-transfer" class="submit-btn">Esegui trasferimento</button>
       </div>
 
-      <!-- Recurring list -->
-      <div id="form-recurring" class="entry-form hidden">
-        <div class="recurring-intro">Abbonamenti e addebiti automatici: vengono registrati da soli alla scadenza.</div>
-        <div id="recurring-list" class="recurring-list"></div>
-        <button id="recurring-add-btn" class="add-row-btn">+ Nuova ricorrente</button>
-        <div id="recurring-total" class="budget-note"></div>
-      </div>
-
       <!-- Fuel form -->
       <div id="form-fuel" class="entry-form hidden">
         <div class="form-row">
@@ -613,6 +606,34 @@
         <button id="submit-fuel" class="submit-btn">Salva rifornimento</button>
       </div>
 
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL: categorie + uscite ricorrenti (prima dei modal di modifica, che si aprono sopra) -->
+  <div id="settings-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Impostazioni">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Impostazioni</div>
+        <button class="icon-btn modal-close" id="settings-modal-close" aria-label="Chiudi">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="budget-scope-row settings-tabs">
+        <button class="scope-pill active" data-settings-tab="categories">Categorie</button>
+        <button class="scope-pill" data-settings-tab="recurring">Ricorrenti</button>
+      </div>
+
+      <div id="settings-categories">
+        <div id="category-groups"></div>
+        <button id="category-add-btn" class="add-row-btn cat-add-btn">+ Nuova categoria</button>
+      </div>
+
+      <div id="settings-recurring" class="hidden">
+        <div class="recurring-intro">Abbonamenti e addebiti automatici: vengono registrati da soli alla scadenza.</div>
+        <div id="recurring-list" class="recurring-list"></div>
+        <button id="recurring-add-btn" class="add-row-btn cat-add-btn">+ Nuova ricorrente</button>
+        <div id="recurring-total" class="budget-note"></div>
+      </div>
     </div>
   </div>
 
@@ -679,20 +700,6 @@
           <button class="submit-btn" id="rec-save">Salva</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- CATEGORIES MODAL (elenco) -->
-  <div id="categories-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-label="Categorie">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">Categorie</div>
-        <button class="icon-btn modal-close" id="categories-modal-close" aria-label="Chiudi">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div id="category-groups"></div>
-      <button id="category-add-btn" class="add-row-btn cat-add-btn">+ Nuova categoria</button>
     </div>
   </div>
 
@@ -795,17 +802,17 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=8"></script>
-  <script src="js/data.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
-  <script src="js/home.js?v=8"></script>
-  <script src="js/stats.js?v=8"></script>
-  <script src="js/budget.js?v=8"></script>
-  <script src="js/log.js?v=8"></script>
-  <script src="js/entry.js?v=8"></script>
-  <script src="js/edit.js?v=8"></script>
-  <script src="js/recurring.js?v=8"></script>
-  <script src="js/fuel.js?v=8"></script>
-  <script src="js/categories.js?v=8"></script>
+  <script src="js/api.js?v=9"></script>
+  <script src="js/data.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
+  <script src="js/home.js?v=9"></script>
+  <script src="js/stats.js?v=9"></script>
+  <script src="js/budget.js?v=9"></script>
+  <script src="js/log.js?v=9"></script>
+  <script src="js/entry.js?v=9"></script>
+  <script src="js/edit.js?v=9"></script>
+  <script src="js/recurring.js?v=9"></script>
+  <script src="js/fuel.js?v=9"></script>
+  <script src="js/categories.js?v=9"></script>
 </body>
 </html>
